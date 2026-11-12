@@ -201,4 +201,22 @@
     <string name="sc_feature_gradient">Градиент</string>
     <string name="sc_feature_rainbow">Радуга</string>
     <string name="sc_incompatible_disabled">Выключено: %1$s, несовместимо с %2$s</string>
+    <string name="sc_section_image_cursor">Картинка-курсор</string>
+    <string name="sc_image_cursor_enabled">Использовать картинку вместо заливки курсора</string>
+    <string name="sc_image_cursor_empty">Выберите изображение. Оно будет сохранено внутри приложения.</string>
+    <string name="sc_image_cursor_ready">Картинка выбрана. Перетаскивайте её или меняйте масштаб жестом/ползунком.</string>
+    <string name="sc_image_cursor_choose">Выбрать изображение</string>
+    <string name="sc_image_cursor_change">Выбрать или заменить изображение</string>
+    <string name="sc_image_cursor_saved">Картинка-курсор сохранена</string>
+    <string name="sc_image_open_failed">Не удалось открыть это изображение</string>
+    <string name="sc_image_save_failed">Не удалось сохранить это изображение</string>
+    <string name="sc_crop_title">Обрезка по форме курсора</string>
+    <string name="sc_crop_cancel">Отменить обрезку</string>
+    <string name="sc_crop_accept">Применить обрезку</string>
+    <string name="sc_crop_zoom">Масштаб: %1$s×</string>
+    <string name="sc_section_line_highlight">Подсветка текущей строки</string>
+    <string name="sc_line_highlight_enabled">Включать только в полноэкранных программах терминала</string>
+    <string name="sc_line_highlight_color">Цвет подсветки</string>
+    <string name="sc_line_highlight_alpha">Прозрачность</string>
+    <string name="sc_line_highlight_speed">Скорость перемещения</string>
 </resources>

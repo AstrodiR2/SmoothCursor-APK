@@ -359,5 +359,23 @@
     <string name="sc_feature_gradient">Gradient</string>
     <string name="sc_feature_rainbow">Rainbow</string>
     <string name="sc_incompatible_disabled">Disabled: %1$s, incompatible with %2$s</string>
+    <string name="sc_section_image_cursor">Image cursor</string>
+    <string name="sc_image_cursor_enabled">Use image as cursor fill</string>
+    <string name="sc_image_cursor_empty">Choose an image. It will be stored inside the app.</string>
+    <string name="sc_image_cursor_ready">Image selected. Drag to move and pinch or use the slider to crop.</string>
+    <string name="sc_image_cursor_choose">Choose image</string>
+    <string name="sc_image_cursor_change">Choose or change image</string>
+    <string name="sc_image_cursor_saved">Image cursor saved</string>
+    <string name="sc_image_open_failed">Could not open this image</string>
+    <string name="sc_image_save_failed">Could not save this image</string>
+    <string name="sc_crop_title">Crop to cursor shape</string>
+    <string name="sc_crop_cancel">Cancel crop</string>
+    <string name="sc_crop_accept">Apply crop</string>
+    <string name="sc_crop_zoom">Zoom: %1$s×</string>
+    <string name="sc_section_line_highlight">Current line highlight</string>
+    <string name="sc_line_highlight_enabled">Enable only in fullscreen terminal apps</string>
+    <string name="sc_line_highlight_color">Highlight color</string>
+    <string name="sc_line_highlight_alpha">Transparency</string>
+    <string name="sc_line_highlight_speed">Movement speed</string>
 
 </resources>

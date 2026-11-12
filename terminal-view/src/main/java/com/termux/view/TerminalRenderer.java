@@ -113,6 +113,8 @@ public final class TerminalRenderer {
         mEmulator.setCellSize((int) mFontWidth, (int) mFontLineSpacing);
         if (reverseVideo)
             canvas.drawColor(palette[TextStyle.COLOR_INDEX_FOREGROUND], PorterDuff.Mode.SRC);
+        SmoothCursorEffects.drawCurrentLineHighlight(mEmulator, canvas, topRow,
+            mFontWidth, mFontLineSpacing, mFontLineSpacingAndAscent, columns);
         float heightOffset = mFontLineSpacingAndAscent;
         for (int row = topRow; row < endRow; row++) {
             heightOffset += mFontLineSpacing;

@@ -2,6 +2,8 @@ package com.termux.view;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -56,6 +58,15 @@ public final class SmoothCursorEffects {
     public static final String K_GRADIENT_COLOR_START = "gradient_color_start";
     public static final String K_GRADIENT_COLOR_END = "gradient_color_end";
     public static final String K_COLOR_SPEED = "cursor_color_speed";
+    public static final String K_IMAGE_PATH = "image_cursor_path";
+    public static final String K_IMAGE_SCALE = "image_cursor_scale";
+    public static final String K_IMAGE_OFFSET_X = "image_cursor_offset_x";
+    public static final String K_IMAGE_OFFSET_Y = "image_cursor_offset_y";
+    public static final String K_IMAGE_TRAIL_COLOR = "image_cursor_trail_color";
+    public static final String K_LINE_HIGHLIGHT_ON = "current_line_highlight_on";
+    public static final String K_LINE_HIGHLIGHT_COLOR = "current_line_highlight_color";
+    public static final String K_LINE_HIGHLIGHT_ALPHA = "current_line_highlight_alpha";
+    public static final String K_LINE_HIGHLIGHT_SPEED = "current_line_highlight_speed";
 
     public static final int CURSOR_SHAPE_FOLLOW_TERMINAL = 0;
     public static final int CURSOR_SHAPE_BLOCK = 1;
@@ -83,7 +94,11 @@ public final class SmoothCursorEffects {
     private static final Paint cursorStroke = new Paint(Paint.ANTI_ALIAS_FLAG);
     private static final Paint cursorGlow = new Paint(Paint.ANTI_ALIAS_FLAG);
     private static final Paint cursorGlowInner = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private static final Paint imagePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private static final Paint trailPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private static final Paint lineHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private static final Path cursorPath = new Path();
+    private static final Path trailPath = new Path();
     private static WeakReference<TerminalView> viewRef = new WeakReference<>(null);
     private static SharedPreferences preferences;
     private static SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
@@ -91,6 +106,8 @@ public final class SmoothCursorEffects {
     private static float glowBlurRadius = -1f;
     private static BlurMaskFilter glowOuterBlur;
     private static BlurMaskFilter glowInnerBlur;
+    private static Bitmap cursorImage;
+    private static String cursorImagePath;
 
     private static volatile boolean useTheme = true;
     private static volatile int color = 0xFFFFFFFF;
@@ -119,6 +136,15 @@ public final class SmoothCursorEffects {
     private static volatile int gradientColorStart = 0xFFFF5A7A;
     private static volatile int gradientColorEnd = 0xFF6C63FF;
     private static volatile int colorSpeed = 50;
+    private static volatile boolean imageCursorEnabled;
+    private static volatile float imageScale = 1f;
+    private static volatile float imageOffsetX;
+    private static volatile float imageOffsetY;
+    private static volatile int imageTrailColor = Color.WHITE;
+    private static volatile boolean lineHighlightEnabled;
+    private static volatile int lineHighlightColor = 0xFF5A8DEE;
+    private static volatile int lineHighlightAlpha = 24;
+    private static volatile int lineHighlightSpeed = 55;
 
     private static final float[] cursorX = new float[4];
     private static final float[] cursorY = new float[4];
@@ -136,6 +162,20 @@ public final class SmoothCursorEffects {
     private static long breathingCycleStartNs;
     private static long breathingIntroStartNs;
     private static boolean cursorEffectAnimating;
+    private static long pulseUntilNs;
+    private static long pulseStartNs;
+    private static int lastPulseHash;
+    private static boolean pulseHashInitialized;
+    private static final float[] previousCursorX = new float[4];
+    private static final float[] previousCursorY = new float[4];
+    private static final float[][] trailX = new float[5][4];
+    private static final float[][] trailY = new float[5][4];
+    private static final long[] trailTimes = new long[5];
+    private static int trailCount;
+    private static float highlightRow;
+    private static float targetHighlightRow;
+    private static boolean highlightInitialized;
+    private static long lastHighlightFrame;
 
     private static float scrollOffset;
     private static int lastTopRow;
@@ -234,6 +274,29 @@ public final class SmoothCursorEffects {
         gradientColorStart = prefs.getInt(K_GRADIENT_COLOR_START, 0xFFFF5A7A);
         gradientColorEnd = prefs.getInt(K_GRADIENT_COLOR_END, 0xFF6C63FF);
         colorSpeed = clamp(prefs.getInt(K_COLOR_SPEED, 50), 1, 100);
+        imageCursorEnabled = prefs.getBoolean(FEATURE_IMAGE_CURSOR, false);
+        imageScale = Math.max(1f, Math.min(5f, prefs.getFloat(K_IMAGE_SCALE, 1f)));
+        imageOffsetX = prefs.getFloat(K_IMAGE_OFFSET_X, 0f);
+        imageOffsetY = prefs.getFloat(K_IMAGE_OFFSET_Y, 0f);
+        imageTrailColor = prefs.getInt(K_IMAGE_TRAIL_COLOR, Color.WHITE);
+        lineHighlightEnabled = prefs.getBoolean(K_LINE_HIGHLIGHT_ON, false);
+        lineHighlightColor = prefs.getInt(K_LINE_HIGHLIGHT_COLOR, 0xFF5A8DEE);
+        lineHighlightAlpha = clamp(prefs.getInt(K_LINE_HIGHLIGHT_ALPHA, 24), 0, 100);
+        lineHighlightSpeed = clamp(prefs.getInt(K_LINE_HIGHLIGHT_SPEED, 55), 1, 100);
+        String imagePath = prefs.getString(K_IMAGE_PATH, null);
+        if (imagePath == null || !imagePath.equals(cursorImagePath)) {
+            cursorImagePath = imagePath;
+            cursorImage = null;
+            if (imagePath != null) {
+                try {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                    cursorImage = BitmapFactory.decodeFile(imagePath, options);
+                } catch (OutOfMemoryError | RuntimeException ignored) {
+                    cursorImage = null;
+                }
+            }
+        }
         long now = System.nanoTime();
         if (breathingEnabled && !wasBreathingEnabled) {
             breathingIntroStartNs = now;
@@ -321,7 +384,9 @@ public final class SmoothCursorEffects {
 
     static void beginTextFrame(TerminalEmulator emulator, int topRow) {
         fadeAnimating = false;
-        if (!fadeEnabled || emulator == null) return;
+        if (emulator == null) return;
+        detectPulseActivity(emulator, topRow);
+        if (!fadeEnabled) return;
         TerminalBuffer screen = emulator.getScreen();
         int rows = emulator.mRows;
         int columns = emulator.mColumns;
@@ -361,7 +426,6 @@ public final class SmoothCursorEffects {
             fadeUntil = 0L;
             return;
         }
-
         if (changed) {
             int blankHash = 0;
             for (int col = 0; col < columns; col++) blankHash = 31 * blankHash + ' ';
@@ -419,6 +483,24 @@ public final class SmoothCursorEffects {
         fadeAnimating = frameNow < fadeUntil;
     }
 
+    private static void detectPulseActivity(TerminalEmulator emulator, int topRow) {
+        int hash = 1;
+        for (int row = 0; row < emulator.mRows; row++) {
+            TerminalRow line = emulator.getScreen().allocateFullLineIfNecessary(
+                emulator.getScreen().externalToInternalRow(topRow + row));
+            char[] text = line.mText;
+            int used = Math.min(line.getSpaceUsed(), Math.min(text.length, emulator.mColumns));
+            for (int col = 0; col < used; col++) hash = 31 * hash + text[col];
+            hash = 31 * hash + 0x7f;
+        }
+        if (pulseHashInitialized && hash != lastPulseHash) {
+            pulseStartNs = System.nanoTime();
+            pulseUntilNs = pulseStartNs + 750_000_000L;
+        }
+        pulseHashInitialized = true;
+        lastPulseHash = hash;
+    }
+
     static boolean drawTextWithFade(Canvas canvas, char[] text, int row, int startColumn, int startIndex,
                                     int columns, int chars, float measuredWidth, float cellWidth,
                                     float x, float baseline, Paint paint) {
@@ -461,7 +543,8 @@ public final class SmoothCursorEffects {
     static void drawCursor(TerminalEmulator emulator, Canvas canvas, int topRow,
                            float cellWidth, int cellHeight, int baselineOffset, boolean visible) {
         cursorEffectAnimating = false;
-        if (emulator == null || (!visible && !breathingEnabled)) return;
+        if (emulator == null || (!visible && !breathingEnabled && !imageCursorEnabled
+            && System.nanoTime() >= pulseUntilNs)) return;
         int col = emulator.getCursorCol();
         int row = emulator.getCursorRow() - topRow;
         float left = col;
@@ -519,6 +602,8 @@ public final class SmoothCursorEffects {
 
         boolean moving = false;
         for (int i = 0; i < 4; i++) {
+            previousCursorX[i] = cursorX[i];
+            previousCursorY[i] = cursorY[i];
             float amount = 1f - (float) Math.exp(-dtMs / cursorTau[i]);
             cursorX[i] += (targetX[i] - cursorX[i]) * amount;
             cursorY[i] += (targetY[i] - cursorY[i]) * amount;
@@ -528,6 +613,20 @@ public final class SmoothCursorEffects {
             else moving = true;
         }
         cursorMoving = moving;
+        if (imageCursorEnabled && moving) {
+            int index = trailCount < trailX.length ? trailCount : trailX.length - 1;
+            System.arraycopy(previousCursorX, 0, trailX[index], 0, 4);
+            System.arraycopy(previousCursorY, 0, trailY[index], 0, 4);
+            if (trailCount < trailX.length) trailCount++;
+            else {
+                for (int i = 1; i < trailX.length; i++) {
+                    System.arraycopy(trailX[i], 0, trailX[i - 1], 0, 4);
+                    System.arraycopy(trailY[i], 0, trailY[i - 1], 0, 4);
+                    trailTimes[i - 1] = trailTimes[i];
+                }
+            }
+            trailTimes[trailCount - 1] = now;
+        }
 
         cursorPath.reset();
         RectF cursorRect = new RectF();
@@ -562,11 +661,10 @@ public final class SmoothCursorEffects {
             cursorPath.lineTo(cursorRect.left, cursorRect.bottom);
             cursorPath.close();
         }
-        int cursorColor = getCursorColor(emulator, now);
-        cursorColor |= 0xFF000000;
         float alphaFactor = getCursorAlphaFactor(now);
 
-        if (glowCursorEnabled && glowCursorIntensity > 0) {
+        if (!imageCursorEnabled && glowCursorEnabled && glowCursorIntensity > 0) {
+            int cursorColor = getCursorColor(emulator, now) | 0xFF000000;
             float radius = Math.max(1f, glowCursorRadius * density);
             if (glowBlurRadius != radius) {
                 glowBlurRadius = radius;
@@ -582,17 +680,140 @@ public final class SmoothCursorEffects {
             cursorGlowInner.setAlpha(Math.round(glowCursorIntensity * 255f / 100f * alphaFactor));
             canvas.drawPath(cursorPath, cursorGlowInner);
         }
-        cursorFill.setColor(cursorColor);
-        cursorFill.setAlpha(Math.round(200f * alphaFactor));
-        canvas.drawPath(cursorPath, cursorFill);
-        if (outline > 0) {
+        boolean trailAnimating = false;
+        if (imageCursorEnabled && cursorImage != null) {
+            trailAnimating = drawImageTrail(canvas, now, cellWidth, cellHeight, baselineOffset);
+            drawCursorImage(canvas, cellWidth, cellHeight, baselineOffset, alphaFactor);
+        } else {
+            int cursorColor = getCursorColor(emulator, now) | 0xFF000000;
+            cursorFill.setColor(cursorColor);
+            cursorFill.setAlpha(Math.round(200f * alphaFactor));
+            canvas.drawPath(cursorPath, cursorFill);
+        }
+        if (outline > 0 && (!imageCursorEnabled || cursorImage == null)) {
+            int cursorColor = getCursorColor(emulator, now) | 0xFF000000;
             cursorStroke.setColor(cursorColor);
             cursorStroke.setAlpha(Math.round(255f * alphaFactor));
             cursorStroke.setStrokeWidth(Math.max(1f, cellHeight * 0.12f * outline / 100f));
             canvas.drawPath(cursorPath, cursorStroke);
         }
-        cursorEffectAnimating = breathingEnabled || gradientEnabled || rainbowEnabled;
+        if (outline > 0 && imageCursorEnabled && cursorImage != null) {
+            cursorStroke.setColor(imageTrailColor);
+            cursorStroke.setAlpha(Math.round(255f * alphaFactor));
+            cursorStroke.setStrokeWidth(Math.max(1f, cellHeight * 0.12f * outline / 100f));
+            canvas.drawPath(cursorPath, cursorStroke);
+        }
+        cursorEffectAnimating = breathingEnabled || now < pulseUntilNs || trailAnimating
+            || (!imageCursorEnabled && (gradientEnabled || rainbowEnabled));
         if (moving || cursorEffectAnimating) requestNextFrame();
+    }
+
+    private static void drawCursorImage(Canvas canvas, float cellWidth, int cellHeight,
+                                        int baselineOffset, float alphaFactor) {
+        if (cursorImage == null) return;
+        // Fit the picture to the whole character cell, then clip to the selected figure. This
+        // keeps the crop editor consistent for narrow forms such as line, underline, and pill.
+        float cellLeft = cursorX[0];
+        if (cursorShape == CURSOR_SHAPE_PILL)
+            cellLeft = (cursorX[0] + cursorX[1]) / 2f - 0.5f;
+        float cellTop = cursorY[0];
+        if (cursorShape == CURSOR_SHAPE_UNDERLINE) cellTop -= 0.86f;
+        else if (cursorShape == CURSOR_SHAPE_FOLLOW_TERMINAL
+            && lastCursorStyle == TerminalEmulator.TERMINAL_CURSOR_STYLE_UNDERLINE) cellTop -= 0.75f;
+        RectF bounds = new RectF(cellLeft * cellWidth, baselineOffset + cellTop * cellHeight,
+            (cellLeft + 1f) * cellWidth, baselineOffset + (cellTop + 1f) * cellHeight);
+        float baseScale = Math.max(bounds.width() / cursorImage.getWidth(),
+            bounds.height() / cursorImage.getHeight());
+        float scale = baseScale * imageScale;
+        float width = cursorImage.getWidth() * scale;
+        float height = cursorImage.getHeight() * scale;
+        float dx = imageOffsetX * bounds.width();
+        float dy = imageOffsetY * bounds.height();
+        RectF destination = new RectF(bounds.centerX() - width / 2f + dx,
+            bounds.centerY() - height / 2f + dy,
+            bounds.centerX() + width / 2f + dx,
+            bounds.centerY() + height / 2f + dy);
+        int save = canvas.save();
+        canvas.clipPath(cursorPath);
+        imagePaint.setAlpha(Math.round(255f * alphaFactor));
+        canvas.drawBitmap(cursorImage, null, destination, imagePaint);
+        imagePaint.setAlpha(255);
+        canvas.restoreToCount(save);
+    }
+
+    private static boolean drawImageTrail(Canvas canvas, long now, float cellWidth, int cellHeight,
+                                          int baselineOffset) {
+        if (trail <= 0) {
+            trailCount = 0;
+            return false;
+        }
+        int kept = 0;
+        boolean animating = false;
+        for (int i = 0; i < trailCount; i++) {
+            float age = (now - trailTimes[i]) / 220_000_000f;
+            if (age >= 1f) continue;
+            animating = true;
+            float alpha = (1f - age) * (trail / 100f) * 0.35f;
+            trailPath.reset();
+            addCursorPath(trailPath, trailX[i], trailY[i], cellWidth, cellHeight, baselineOffset);
+            trailPaint.setColor(imageTrailColor);
+            trailPaint.setAlpha(Math.round(alpha * 255f));
+            canvas.drawPath(trailPath, trailPaint);
+            if (kept != i) {
+                System.arraycopy(trailX[i], 0, trailX[kept], 0, 4);
+                System.arraycopy(trailY[i], 0, trailY[kept], 0, 4);
+                trailTimes[kept] = trailTimes[i];
+            }
+            kept++;
+        }
+        trailCount = kept;
+        return animating;
+    }
+
+    private static void addCursorPath(Path path, float[] xs, float[] ys, float cellWidth,
+                                      int cellHeight, int baselineOffset) {
+        float l = Math.min(xs[0], xs[3]) * cellWidth;
+        float r = Math.max(xs[1], xs[2]) * cellWidth;
+        float t = baselineOffset + Math.min(ys[0], ys[1]) * cellHeight;
+        float b = baselineOffset + Math.max(ys[2], ys[3]) * cellHeight;
+        RectF rect = new RectF(l, t, r, b);
+        if (cursorShape == CURSOR_SHAPE_ROUNDED_BLOCK || cursorShape == CURSOR_SHAPE_PILL) {
+            float radius = cursorShape == CURSOR_SHAPE_PILL
+                ? rect.width() / 2f : Math.min(cellWidth, cellHeight) * roundedRadius / 100f;
+            if (radius > 0f) path.addRoundRect(rect, radius, radius, Path.Direction.CW);
+            else path.addRect(rect, Path.Direction.CW);
+        } else {
+            path.addRect(rect, Path.Direction.CW);
+        }
+    }
+
+    /** Draw the fullscreen-app row highlight before terminal text is painted. */
+    static boolean drawCurrentLineHighlight(TerminalEmulator emulator, Canvas canvas, int topRow,
+                                            float fontWidth, int cellHeight, int baselineOffset,
+                                            int columns) {
+        if (!lineHighlightEnabled || emulator == null || !emulator.isAlternateBufferActive()) {
+            highlightInitialized = false;
+            return false;
+        }
+        targetHighlightRow = emulator.getCursorRow() - topRow;
+        long now = System.nanoTime();
+        if (!highlightInitialized) {
+            highlightRow = targetHighlightRow;
+            highlightInitialized = true;
+        }
+        float dt = lastHighlightFrame == 0L ? 0f : Math.min((now - lastHighlightFrame) / 1_000_000f, 50f);
+        lastHighlightFrame = now;
+        float tau = 300f - 270f * lineHighlightSpeed / 100f;
+        float amount = 1f - (float) Math.exp(-dt / Math.max(20f, tau));
+        highlightRow += (targetHighlightRow - highlightRow) * amount;
+        boolean moving = Math.abs(targetHighlightRow - highlightRow) > 0.01f;
+        if (!moving) highlightRow = targetHighlightRow;
+        lineHighlightPaint.setColor(lineHighlightColor);
+        lineHighlightPaint.setAlpha(Math.round(lineHighlightAlpha * 255f / 100f));
+        float top = baselineOffset + highlightRow * cellHeight;
+        canvas.drawRect(0f, top, columns * fontWidth, top + cellHeight, lineHighlightPaint);
+        if (moving) requestNextFrame();
+        return moving;
     }
 
     private static int getCursorColor(TerminalEmulator emulator, long now) {
@@ -616,6 +837,11 @@ public final class SmoothCursorEffects {
     }
 
     private static float getCursorAlphaFactor(long now) {
+        if (now < pulseUntilNs) {
+            float pulsePhase = ((now - pulseStartNs) % 520_000_000L) / 520_000_000f;
+            float pulseWave = 0.5f - 0.5f * (float) Math.cos(pulsePhase * Math.PI * 2d);
+            return 0.35f + pulseWave * 0.65f;
+        }
         if (!breathingEnabled) return 1f;
         float phase = cyclePhase(now, breathingSpeed, breathingCycleStartNs);
         float wave = 0.5f - 0.5f * (float) Math.cos(phase * Math.PI * 2d);
