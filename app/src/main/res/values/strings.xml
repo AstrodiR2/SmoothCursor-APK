@@ -320,6 +320,11 @@
     <string name="sc_section_glow">Glow</string>
     <string name="sc_glow_enabled">Enable cursor and text glow</string>
     <string name="sc_glow_radius">Glow radius</string>
+    <string name="sc_glow_split">Separate glow for text and cursor</string>
+    <string name="sc_glow_text">Text glow</string>
+    <string name="sc_glow_cursor">Cursor glow</string>
+    <string name="sc_glow_text_enabled">Enable text glow</string>
+    <string name="sc_glow_cursor_enabled">Enable cursor glow</string>
     <string name="sc_glow_intensity">Glow intensity</string>
     <string name="sc_section_fade">Text fade-in</string>
     <string name="sc_fade_enabled">Enable fade-in for new text</string>
@@ -329,5 +334,30 @@
     <string name="sc_ms">%1$d ms</string>
     <string name="sc_reset">Reset settings</string>
     <string name="sc_reset_confirm">Restore SmoothCursor settings to their defaults?</string>
+    <string name="sc_back">Back</string>
+    <string name="sc_section_breathing">Breathing blink</string>
+    <string name="sc_section_color_effects">Cursor color effects</string>
+    <string name="sc_cursor_shape">Cursor shape</string>
+    <string name="sc_shape_follow_terminal">As set by terminal</string>
+    <string name="sc_shape_block">Block</string>
+    <string name="sc_shape_line">Line</string>
+    <string name="sc_shape_underline">Underline</string>
+    <string name="sc_shape_rounded_block">Rounded block</string>
+    <string name="sc_shape_pill">Pill</string>
+    <string name="sc_rounded_radius">Rounded corner radius (0 = block)</string>
+    <string name="sc_breathing_enabled">Enable breathing blink</string>
+    <string name="sc_breathing_speed">Breathing speed</string>
+    <string name="sc_breathing_depth">Breathing depth</string>
+    <string name="sc_gradient_enabled">Gradient</string>
+    <string name="sc_rainbow_enabled">Rainbow</string>
+    <string name="sc_gradient_color_start">Gradient color A</string>
+    <string name="sc_gradient_color_end">Gradient color B</string>
+    <string name="sc_color_effect_speed">Gradient/rainbow speed</string>
+    <string name="sc_feature_custom_color">Custom cursor color</string>
+    <string name="sc_feature_image_cursor">Image cursor</string>
+    <string name="sc_feature_error_flash">Red error flash</string>
+    <string name="sc_feature_gradient">Gradient</string>
+    <string name="sc_feature_rainbow">Rainbow</string>
+    <string name="sc_incompatible_disabled">Disabled: %1$s, incompatible with %2$s</string>
 
 </resources>

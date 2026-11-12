@@ -349,6 +349,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     @Override
     public void onResume() {
         super.onResume();
+        com.termux.view.SmoothCursorEffects.applyPreferredRefreshRate(this);
         Logger.logVerbose(LOG_TAG, "onResume");
         if (mIsInvalidState)
             return;

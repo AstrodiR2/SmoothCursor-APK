@@ -1,6 +1,19 @@
-# Termux:Monet + SmoothCursor (Standalone)
+<div align="center">
 
-A Termux build with **SmoothCursor built directly into the APK**: a Neovide-style smooth caret, smooth scrolling and text effects.
+<h1>SmoothCursor</h1>
+
+<p><b>Neovide-style smooth cursor, neon glow, fade-in text and custom wallpaper for Termux</b></p>
+
+<p>
+  <a href="README.md">🇬🇧 English</a> · <a href="README.ru.md">🇷🇺 Русский</a>
+</p>
+
+<p>
+  <a href="https://github.com/AstrodiR2/SmoothCursor-APK/releases/latest"><img alt="Last release" src="https://img.shields.io/github/v/release/AstrodiR2/SmoothCursor-APK?style=for-the-badge&label=Last%20release&color=2ea043"></a>
+  <a href="https://github.com/AstrodiR2/SmoothCursor-APK/releases/latest"><img alt="Download Termux" src="https://img.shields.io/badge/Download%20Termux-APK-3ddc84?style=for-the-badge&logo=android&logoColor=white"></a>
+</p>
+
+</div>
 
 > ## ✅ No root. No LSPosed. No Xposed.
 > 👉 My previous project: **[github.com/AstrodiR2/SmoothCursor](https://github.com/AstrodiR2/SmoothCursor)** worked **only with root** (Xposed/LSPosed module).
@@ -16,7 +29,7 @@ Made by **[AstrodiR2](https://github.com/AstrodiR2)**.
 
 - Smooth animated cursor (Neovide-like), with configurable color, outline and trail
 - Smooth scrolling with adjustable speed
-- Padding, glow and smooth text fade-in
+- Padding, glow (shared or separate for text and cursor) and smooth text fade-in
 - All settings in the app, nothing to configure externally
 - Monet / Material You theming (`Termux:Monet`)
 

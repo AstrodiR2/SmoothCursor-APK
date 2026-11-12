@@ -1,6 +1,19 @@
-# Termux:Monet + SmoothCursor (Standalone)
+<div align="center">
 
-Сборка Termux, в которую **SmoothCursor встроен прямо в APK**: плавный курсор как в Neovide, плавная прокрутка и текстовые эффекты.
+<h1>SmoothCursor</h1>
+
+<p><b>Плавный курсор в стиле Neovide, неоновое свечение, плавное появление текста и свои обои для Termux</b></p>
+
+<p>
+  <a href="README.md">🇬🇧 English</a> · <a href="README.ru.md">🇷🇺 Русский</a>
+</p>
+
+<p>
+  <a href="https://github.com/AstrodiR2/SmoothCursor-APK/releases/latest"><img alt="Последний релиз" src="https://img.shields.io/github/v/release/AstrodiR2/SmoothCursor-APK?style=for-the-badge&label=%D0%9F%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9%20%D1%80%D0%B5%D0%BB%D0%B8%D0%B7&color=2ea043"></a>
+  <a href="https://github.com/AstrodiR2/SmoothCursor-APK/releases/latest"><img alt="Скачать Termux" src="https://img.shields.io/badge/%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20Termux-APK-3ddc84?style=for-the-badge&logo=android&logoColor=white"></a>
+</p>
+
+</div>
 
 > ## ✅ Без root. Без LSPosed. Без Xposed.
 > 👉 Мой прошлый проект: **[github.com/AstrodiR2/SmoothCursor](https://github.com/AstrodiR2/SmoothCursor)** работал **только с root** (модуль Xposed/LSPosed).
@@ -16,7 +29,7 @@
 
 - Плавный анимированный курсор (как в Neovide): цвет, обводка и шлейф настраиваются
 - Плавная прокрутка с регулировкой скорости
-- Отступы, свечение и плавное появление текста
+- Отступы, свечение (общее или раздельное для текста и курсора) и плавное появление текста
 - Все настройки внутри приложения, ничего внешнего настраивать не нужно
 - Monet / Material You (`Termux:Monet`)
 

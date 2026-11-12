@@ -162,6 +162,11 @@
     <string name="sc_section_glow">Свечение</string>
     <string name="sc_glow_enabled">Включить свечение курсора и текста</string>
     <string name="sc_glow_radius">Радиус свечения</string>
+    <string name="sc_glow_split">Раздельное свечение текста и курсора</string>
+    <string name="sc_glow_text">Свечение текста</string>
+    <string name="sc_glow_cursor">Свечение курсора</string>
+    <string name="sc_glow_text_enabled">Включить свечение текста</string>
+    <string name="sc_glow_cursor_enabled">Включить свечение курсора</string>
     <string name="sc_glow_intensity">Интенсивность свечения</string>
     <string name="sc_section_fade">Появление текста</string>
     <string name="sc_fade_enabled">Плавное появление нового текста</string>
@@ -171,4 +176,29 @@
     <string name="sc_ms">%1$d мс</string>
     <string name="sc_reset">Сбросить настройки</string>
     <string name="sc_reset_confirm">Восстановить настройки SmoothCursor по умолчанию?</string>
+    <string name="sc_back">Назад</string>
+    <string name="sc_section_breathing">Мигание «дыханием»</string>
+    <string name="sc_section_color_effects">Цветовые эффекты курсора</string>
+    <string name="sc_cursor_shape">Форма курсора</string>
+    <string name="sc_shape_follow_terminal">Как задаёт терминал</string>
+    <string name="sc_shape_block">Блок</string>
+    <string name="sc_shape_line">Линия</string>
+    <string name="sc_shape_underline">Подчёркивание</string>
+    <string name="sc_shape_rounded_block">Скруглённый блок</string>
+    <string name="sc_shape_pill">Таблетка</string>
+    <string name="sc_rounded_radius">Радиус скругления (0 = обычный блок)</string>
+    <string name="sc_breathing_enabled">Включить мигание «дыханием»</string>
+    <string name="sc_breathing_speed">Скорость дыхания</string>
+    <string name="sc_breathing_depth">Глубина дыхания</string>
+    <string name="sc_gradient_enabled">Градиент</string>
+    <string name="sc_rainbow_enabled">Радуга</string>
+    <string name="sc_gradient_color_start">Цвет градиента A</string>
+    <string name="sc_gradient_color_end">Цвет градиента B</string>
+    <string name="sc_color_effect_speed">Скорость градиента/радуги</string>
+    <string name="sc_feature_custom_color">Свой цвет курсора</string>
+    <string name="sc_feature_image_cursor">Картинка-курсор</string>
+    <string name="sc_feature_error_flash">Красная вспышка при ошибке</string>
+    <string name="sc_feature_gradient">Градиент</string>
+    <string name="sc_feature_rainbow">Радуга</string>
+    <string name="sc_incompatible_disabled">Выключено: %1$s, несовместимо с %2$s</string>
 </resources>
