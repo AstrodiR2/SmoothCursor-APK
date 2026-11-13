@@ -24,6 +24,9 @@ public interface TerminalSessionClient {
 
     void onColorsChanged(@NonNull TerminalSession session);
 
+    /** Receives the private SmoothCursor command-event OSC payload. */
+    default void onSmoothCursorCommandEvent(@NonNull TerminalSession session, @NonNull String event) { }
+
     void onTerminalCursorStateChange(boolean state);
 
     void setTerminalShellPid(@NonNull TerminalSession session, int pid);

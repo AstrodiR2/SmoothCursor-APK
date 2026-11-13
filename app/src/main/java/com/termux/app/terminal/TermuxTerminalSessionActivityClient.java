@@ -20,6 +20,7 @@ import com.termux.shared.interact.ShareUtils;
 import com.termux.shared.termux.shell.command.runner.terminal.TermuxSession;
 import com.termux.shared.termux.interact.TextInputDialogUtils;
 import com.termux.app.TermuxActivity;
+import com.termux.app.TermuxApplication;
 import com.termux.shared.termux.terminal.TermuxTerminalSessionClientBase;
 import com.termux.shared.termux.TermuxConstants;
 import com.termux.app.TermuxService;
@@ -29,6 +30,7 @@ import com.termux.shared.logger.Logger;
 import com.termux.terminal.TerminalColors;
 import com.termux.terminal.TerminalSession;
 import com.termux.terminal.TerminalSessionClient;
+import com.termux.view.SmoothCursorEffects;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -125,6 +127,12 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
             return;
         if (mActivity.getCurrentSession() == changedSession)
             mActivity.getTerminalView().onScreenUpdated();
+    }
+
+    @Override
+    public void onSmoothCursorCommandEvent(@NonNull TerminalSession session, @NonNull String event) {
+        if (mActivity.getCurrentSession() == session)
+            SmoothCursorCommandHandler.handle(mActivity, session, event, TermuxApplication.isAppInForeground());
     }
 
     @Override

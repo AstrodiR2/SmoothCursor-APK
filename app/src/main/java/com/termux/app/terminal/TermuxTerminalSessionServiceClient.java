@@ -3,6 +3,7 @@ package com.termux.app.terminal;
 import android.app.Service;
 import androidx.annotation.NonNull;
 import com.termux.app.TermuxService;
+import com.termux.app.TermuxApplication;
 import com.termux.shared.termux.shell.command.runner.terminal.TermuxSession;
 import com.termux.shared.termux.terminal.TermuxTerminalSessionClientBase;
 import com.termux.terminal.TerminalSession;
@@ -19,6 +20,11 @@ public class TermuxTerminalSessionServiceClient extends TermuxTerminalSessionCli
 
     public TermuxTerminalSessionServiceClient(TermuxService service) {
         this.mService = service;
+    }
+
+    @Override
+    public void onSmoothCursorCommandEvent(@NonNull TerminalSession session, @NonNull String event) {
+        SmoothCursorCommandHandler.handle(mService, session, event, TermuxApplication.isAppInForeground());
     }
 
     @Override

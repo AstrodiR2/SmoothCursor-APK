@@ -50,6 +50,7 @@ import com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY;
 import com.termux.app.activities.HelpActivity;
 import com.termux.app.activities.SettingsActivity;
 import com.termux.app.activities.SmoothCursorSettingsActivity;
+import com.termux.app.activities.SmoothCursorShellHook;
 import com.termux.shared.termux.crash.TermuxCrashUtils;
 import com.termux.shared.termux.settings.preferences.TermuxAppSharedPreferences;
 import com.termux.app.terminal.TermuxSessionsListViewController;
@@ -785,7 +786,12 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
                 return true;
             case CONTEXT_MENU_SMOOTH_CURSOR_SETTINGS_ID:
-                ActivityUtils.startActivity(this, new Intent(this, SmoothCursorSettingsActivity.class));
+                Intent smoothCursorIntent = new Intent(this, SmoothCursorSettingsActivity.class);
+                TerminalSession currentSmoothSession = getCurrentSession();
+                if (currentSmoothSession != null)
+                    smoothCursorIntent.putExtra(SmoothCursorShellHook.EXTRA_SHELL,
+                        SmoothCursorShellHook.detectShellForPid(currentSmoothSession.getPid()));
+                ActivityUtils.startActivity(this, smoothCursorIntent);
                 return true;
             case CONTEXT_MENU_REPORT_ID:
                 mTermuxTerminalViewClient.reportIssueFromTranscript();

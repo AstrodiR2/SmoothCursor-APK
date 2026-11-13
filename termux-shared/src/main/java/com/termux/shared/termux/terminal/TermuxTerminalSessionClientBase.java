@@ -40,6 +40,10 @@ public class TermuxTerminalSessionClientBase implements TerminalSessionClient {
     }
 
     @Override
+    public void onSmoothCursorCommandEvent(@NonNull TerminalSession session, @NonNull String event) {
+    }
+
+    @Override
     public void onTerminalCursorStateChange(boolean state) {
     }
 

@@ -11,12 +11,16 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -31,6 +35,7 @@ import com.termux.R;
 import com.termux.view.SmoothCursorEffects;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,6 +54,9 @@ public final class SmoothCursorSettingsActivity extends Activity {
     private static final String SECTION_FADE = "fade";
     private static final String SECTION_IMAGE_CURSOR = "image_cursor";
     private static final String SECTION_LINE_HIGHLIGHT = "line_highlight";
+    private static final String SECTION_COMMAND_ERROR = "command_error";
+    private static final String SECTION_COMMAND_PULSE = "command_pulse";
+    private static final String SECTION_COMMAND_RULES = "command_rules";
     private static final int REQUEST_IMAGE = 7102;
 
     private final int[] cursorShapeLabels = {
@@ -65,12 +73,26 @@ public final class SmoothCursorSettingsActivity extends Activity {
     private Switch gradientSwitch;
     private Switch rainbowSwitch;
     private Switch imageSwitch;
+    private String shellName;
+    private boolean shellSupported;
+    private LinearLayout rulesContainer;
+    private ArrayList<SmoothCursorEffects.CommandRule> editingRules;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         preferences = SmoothCursorEffects.getPreferences(this);
+        shellName = getIntent().getStringExtra(SmoothCursorShellHook.EXTRA_SHELL);
+        shellSupported = SmoothCursorShellHook.isSupported(shellName);
+        showHookResult(SmoothCursorShellHook.sync(this, preferences, shellName));
         renderPage();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (preferences != null)
+            showHookResult(SmoothCursorShellHook.sync(this, preferences, shellName));
     }
 
     private void renderPage() {
@@ -100,6 +122,9 @@ public final class SmoothCursorSettingsActivity extends Activity {
         addMenuItem(R.string.sc_section_fade, SECTION_FADE);
         addMenuItem(R.string.sc_section_image_cursor, SECTION_IMAGE_CURSOR);
         addMenuItem(R.string.sc_section_line_highlight, SECTION_LINE_HIGHLIGHT);
+        addMenuItem(R.string.sc_section_command_error, SECTION_COMMAND_ERROR);
+        addMenuItem(R.string.sc_section_command_pulse, SECTION_COMMAND_PULSE);
+        addMenuItem(R.string.sc_section_command_rules, SECTION_COMMAND_RULES);
         addResetButton();
     }
 
@@ -108,7 +133,7 @@ public final class SmoothCursorSettingsActivity extends Activity {
         setTitle(title);
         Button back = new Button(this);
         back.setText(R.string.sc_back);
-        back.setAllCaps(false);
+        styleActionButton(back, false);
         back.setOnClickListener(v -> finish());
         content.addView(back, matchWrap());
         addHeader(title);
@@ -159,6 +184,15 @@ public final class SmoothCursorSettingsActivity extends Activity {
                     SmoothCursorEffects.K_LINE_HIGHLIGHT_ALPHA, 0, 100, 24, R.string.sc_percent);
                 addSeekBar(R.string.sc_line_highlight_speed,
                     SmoothCursorEffects.K_LINE_HIGHLIGHT_SPEED, 1, 100, 55, R.string.sc_percent);
+                break;
+            case SECTION_COMMAND_ERROR:
+                buildCommandErrorSettings();
+                break;
+            case SECTION_COMMAND_PULSE:
+                buildCommandPulseSettings();
+                break;
+            case SECTION_COMMAND_RULES:
+                buildCommandRulesSettings();
                 break;
             default:
                 buildMainMenu();
@@ -253,6 +287,355 @@ public final class SmoothCursorSettingsActivity extends Activity {
         content.addView(splitBlock, matchWrap());
     }
 
+
+    private void buildCommandErrorSettings() {
+        addCommandSwitch(R.string.sc_error_effect_enabled, SmoothCursorEffects.FEATURE_ERROR_FLASH,
+            false, true, false);
+        addChoice(R.string.sc_error_effect_type, SmoothCursorEffects.K_ERROR_STYLE, 0,
+            new int[]{R.string.sc_error_type_tint, R.string.sc_error_type_flash});
+        addColorEditor(R.string.sc_error_effect_color, SmoothCursorEffects.K_ERROR_COLOR, 0xFFFF3B30);
+        addColorEditor(R.string.sc_cancel_effect_color, SmoothCursorEffects.K_CANCEL_COLOR, 0xFFFFB020);
+        addSeekBar(R.string.sc_error_effect_duration, SmoothCursorEffects.K_ERROR_DURATION,
+            150, 5000, 900, R.string.sc_ms);
+        addSeekBar(R.string.sc_error_effect_strength, SmoothCursorEffects.K_ERROR_STRENGTH,
+            0, 100, 80, R.string.sc_percent);
+    }
+
+    private void addRuleDefaultColorEditor() {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView label = new TextView(this);
+        label.setText(R.string.sc_command_rules_color);
+        label.setTextSize(15);
+        row.addView(label, new LinearLayout.LayoutParams(0, dp(52), 1f));
+        Button color = new Button(this);
+        styleActionButton(color, false);
+        Runnable update = () -> {
+            int value = preferences.getInt(SmoothCursorEffects.K_COMMAND_RULE_DEFAULT_COLOR, 0xFF42A5F5);
+            color.setText(String.format(Locale.ROOT, "#%06X", value & 0xFFFFFF));
+            color.setBackground(roundRect(value, 14, value));
+            color.setTextColor(contrastColor(value));
+        };
+        update.run();
+        color.setEnabled(shellSupported);
+        color.setOnClickListener(v -> {
+            EditText input = new EditText(this);
+            input.setSingleLine(true);
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+            input.setText(String.format(Locale.ROOT, "#%06X",
+                preferences.getInt(SmoothCursorEffects.K_COMMAND_RULE_DEFAULT_COLOR, 0xFF42A5F5) & 0xFFFFFF));
+            new AlertDialog.Builder(this).setTitle(R.string.sc_command_rules_color)
+                .setView(input).setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.sc_apply, (dialog, which) -> {
+                    String text = input.getText().toString().trim();
+                    if (!text.startsWith("#")) text = "#" + text;
+                    try {
+                        int newColor = Color.parseColor(text) | 0xFF000000;
+                        preferences.edit().putInt(SmoothCursorEffects.K_COMMAND_RULE_DEFAULT_COLOR, newColor).apply();
+                        for (int i = 0; i < editingRules.size(); i++) {
+                            SmoothCursorEffects.CommandRule current = editingRules.get(i);
+                            if (!current.customColor) editingRules.set(i,
+                                new SmoothCursorEffects.CommandRule(current.command, newColor, current.pulse, false));
+                        }
+                        persistRules();
+                        update.run();
+                        renderRuleRows();
+                    } catch (IllegalArgumentException e) {
+                        Toast.makeText(this, R.string.sc_invalid_color, Toast.LENGTH_SHORT).show();
+                    }
+                }).show();
+        });
+        row.addView(color, new LinearLayout.LayoutParams(dp(136), dp(46)));
+        content.addView(row, matchWrap());
+    }
+
+    private void buildCommandPulseSettings() {
+        addCommandSwitch(R.string.sc_command_pulse_enabled, SmoothCursorEffects.K_COMMAND_PULSE_ON,
+            true, false, false);
+        addCommandSwitch(R.string.sc_command_vibration_enabled, SmoothCursorEffects.K_COMMAND_VIBRATION_ON,
+            true, false, false);
+        addSeekBar(R.string.sc_command_vibration_strength,
+            SmoothCursorEffects.K_COMMAND_VIBRATION_STRENGTH, 0, 100, 55, R.string.sc_percent);
+        addCommandSwitch(R.string.sc_command_notification_enabled,
+            SmoothCursorEffects.K_COMMAND_NOTIFICATION_ON, true, false, false);
+    }
+
+    private void buildCommandRulesSettings() {
+        addCommandSwitch(R.string.sc_command_rules_enabled, SmoothCursorEffects.K_COMMAND_RULES_ON,
+            true, false, true);
+        addRuleDefaultColorEditor();
+        TextView note = new TextView(this);
+        note.setText(R.string.sc_command_rules_help);
+        note.setTextSize(14);
+        note.setAlpha(0.78f);
+        note.setPadding(dp(4), dp(4), dp(4), dp(12));
+        content.addView(note, matchWrap());
+        rulesContainer = new LinearLayout(this);
+        rulesContainer.setOrientation(LinearLayout.VERTICAL);
+        content.addView(rulesContainer, matchWrap());
+        editingRules = new ArrayList<>(SmoothCursorEffects.getCommandRules(preferences));
+        renderRuleRows();
+
+        Button add = new Button(this);
+        add.setText(R.string.sc_command_rule_add);
+        styleActionButton(add, true);
+        add.setEnabled(shellSupported && preferences.getBoolean(SmoothCursorEffects.K_COMMAND_RULES_ON, true));
+        add.setOnClickListener(v -> showAddRuleDialog());
+        content.addView(add, matchWrap());
+    }
+
+    private void addCommandSwitch(int title, String key, boolean defaultValue,
+                                  boolean feature, boolean refreshOnChange) {
+        Switch control = createSwitch(title, shellSupported && preferences.getBoolean(key, defaultValue));
+        control.setEnabled(shellSupported);
+        control.setOnCheckedChangeListener((button, checked) -> {
+            if (!shellSupported) return;
+            if (feature) {
+                List<String> disabled = SmoothCursorEffects.setFeatureEnabled(preferences, key, checked);
+                showIncompatibilityToast(disabled, key);
+            } else {
+                preferences.edit().putBoolean(key, checked).apply();
+            }
+            showHookResult(SmoothCursorShellHook.sync(this, preferences, shellName));
+            if (refreshOnChange) renderPage();
+        });
+        content.addView(control, matchWrap());
+    }
+
+    private void addChoice(int title, String key, int defaultValue, int[] optionIds) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, dp(6), 0, dp(6));
+        TextView label = new TextView(this);
+        label.setText(title);
+        label.setTextSize(15);
+        row.addView(label, new LinearLayout.LayoutParams(0, dp(52), 1f));
+        Button choice = new Button(this);
+        styleActionButton(choice, false);
+        Runnable update = () -> {
+            int selected = clamp(preferences.getInt(key, defaultValue), 0, optionIds.length - 1);
+            choice.setText(getString(optionIds[selected]));
+        };
+        update.run();
+        choice.setEnabled(shellSupported);
+        choice.setOnClickListener(v -> {
+            String[] labels = new String[optionIds.length];
+            for (int i = 0; i < optionIds.length; i++) labels[i] = getString(optionIds[i]);
+            int selected = clamp(preferences.getInt(key, defaultValue), 0, optionIds.length - 1);
+            new AlertDialog.Builder(this).setTitle(title).setSingleChoiceItems(labels, selected,
+                (dialog, which) -> {
+                    preferences.edit().putInt(key, which).apply();
+                    update.run();
+                    dialog.dismiss();
+                }).setNegativeButton(android.R.string.cancel, null).show();
+        });
+        row.addView(choice, new LinearLayout.LayoutParams(dp(142), dp(48)));
+        content.addView(row, matchWrap());
+    }
+
+    private void renderRuleRows() {
+        if (rulesContainer == null || editingRules == null) return;
+        rulesContainer.removeAllViews();
+        boolean rulesActive = shellSupported && preferences.getBoolean(SmoothCursorEffects.K_COMMAND_RULES_ON, true);
+        for (int i = 0; i < editingRules.size(); i++) {
+            final int index = i;
+            SmoothCursorEffects.CommandRule rule = editingRules.get(i);
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setPadding(dp(12), dp(10), dp(12), dp(10));
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(Color.rgb(25, 33, 46));
+            background.setCornerRadius(dp(16));
+            background.setStroke(dp(1), Color.rgb(53, 68, 88));
+            card.setBackground(background);
+            LinearLayout.LayoutParams cardParams = matchWrap();
+            cardParams.bottomMargin = dp(8);
+
+            EditText command = new EditText(this);
+            command.setSingleLine(true);
+            command.setTextColor(Color.WHITE);
+            command.setHintTextColor(Color.LTGRAY);
+            command.setTextSize(15);
+            command.setHint(R.string.sc_command_rule_hint);
+            command.setText(rule.command);
+            card.addView(command, matchWrap());
+
+            LinearLayout controls = new LinearLayout(this);
+            controls.setOrientation(LinearLayout.HORIZONTAL);
+            controls.setGravity(Gravity.CENTER_VERTICAL);
+            Button colorButton = new Button(this);
+            colorButton.setText(String.format(Locale.ROOT, "#%06X", rule.color & 0xFFFFFF));
+            styleActionButton(colorButton, false);
+            colorButton.setBackground(roundRect(rule.color, 14, rule.color));
+            colorButton.setTextColor(contrastColor(rule.color));
+            colorButton.setOnClickListener(v -> showRuleColorDialog(index));
+            controls.addView(colorButton, new LinearLayout.LayoutParams(0, dp(44), 1f));
+
+            Switch pulse = new Switch(this);
+            pulse.setText(R.string.sc_command_rule_pulse);
+            pulse.setTextSize(13);
+            pulse.setTextColor(Color.WHITE);
+            pulse.setChecked(rule.pulse);
+            pulse.setOnCheckedChangeListener((button, checked) -> {
+                editingRules.set(index, new SmoothCursorEffects.CommandRule(
+                    editingRules.get(index).command, editingRules.get(index).color, checked,
+                    editingRules.get(index).customColor));
+                persistRules();
+            });
+            controls.addView(pulse, new LinearLayout.LayoutParams(0, dp(48), 1.2f));
+
+            TextView up = smallAction("↑", R.string.sc_command_rule_move_up);
+            up.setEnabled(index > 0);
+            up.setOnClickListener(v -> moveRule(index, index - 1));
+            controls.addView(up, new LinearLayout.LayoutParams(dp(42), dp(42)));
+            TextView down = smallAction("↓", R.string.sc_command_rule_move_down);
+            down.setEnabled(index + 1 < editingRules.size());
+            down.setOnClickListener(v -> moveRule(index, index + 1));
+            controls.addView(down, new LinearLayout.LayoutParams(dp(42), dp(42)));
+            TextView delete = smallAction("×", R.string.sc_command_rule_delete);
+            delete.setOnClickListener(v -> {
+                editingRules.remove(index);
+                persistRules();
+                renderRuleRows();
+            });
+            controls.addView(delete, new LinearLayout.LayoutParams(dp(42), dp(42)));
+            card.addView(controls, matchWrap());
+
+            Button save = new Button(this);
+            save.setText(R.string.sc_command_rule_save);
+            styleActionButton(save, true);
+            save.setOnClickListener(v -> {
+                String phrase = command.getText().toString().trim();
+                if (phrase.isEmpty()) {
+                    command.setError(getString(R.string.sc_command_rule_required));
+                    return;
+                }
+                SmoothCursorEffects.CommandRule old = editingRules.get(index);
+                editingRules.set(index, new SmoothCursorEffects.CommandRule(phrase, old.color, old.pulse, old.customColor));
+                persistRules();
+                Toast.makeText(this, R.string.sc_command_rule_saved, Toast.LENGTH_SHORT).show();
+            });
+            card.addView(save, matchWrap());
+            setEnabledRecursive(card, rulesActive);
+            rulesContainer.addView(card, cardParams);
+            card.startAnimation(enterAnimation());
+        }
+    }
+
+    private void showAddRuleDialog() {
+        EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setHint(R.string.sc_command_rule_hint);
+        new AlertDialog.Builder(this).setTitle(R.string.sc_command_rule_add)
+            .setView(input).setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.sc_apply, (dialog, which) -> {
+                String phrase = input.getText().toString().trim();
+                if (phrase.isEmpty()) {
+                    Toast.makeText(this, R.string.sc_command_rule_required, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                int defaultColor = preferences.getInt(SmoothCursorEffects.K_COMMAND_RULE_DEFAULT_COLOR, 0xFF42A5F5);
+                editingRules.add(new SmoothCursorEffects.CommandRule(phrase, defaultColor, false, false));
+                persistRules();
+                renderRuleRows();
+            }).show();
+    }
+
+    private void showRuleColorDialog(int index) {
+        SmoothCursorEffects.CommandRule rule = editingRules.get(index);
+        EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        input.setText(String.format(Locale.ROOT, "#%06X", rule.color & 0xFFFFFF));
+        new AlertDialog.Builder(this).setTitle(R.string.sc_command_rule_color)
+            .setView(input).setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.sc_apply, (dialog, which) -> {
+                String value = input.getText().toString().trim();
+                if (!value.startsWith("#")) value = "#" + value;
+                try {
+                    int color = Color.parseColor(value) | 0xFF000000;
+                    SmoothCursorEffects.CommandRule current = editingRules.get(index);
+                    editingRules.set(index, new SmoothCursorEffects.CommandRule(current.command, color, current.pulse, true));
+                    persistRules();
+                    renderRuleRows();
+                } catch (IllegalArgumentException e) {
+                    Toast.makeText(this, R.string.sc_invalid_color, Toast.LENGTH_SHORT).show();
+                }
+            }).show();
+    }
+
+    private void moveRule(int from, int to) {
+        if (to < 0 || to >= editingRules.size()) return;
+        SmoothCursorEffects.CommandRule rule = editingRules.remove(from);
+        editingRules.add(to, rule);
+        persistRules();
+        renderRuleRows();
+    }
+
+    private void persistRules() {
+        SmoothCursorEffects.saveCommandRules(preferences, editingRules);
+        showHookResult(SmoothCursorShellHook.sync(this, preferences, shellName));
+    }
+
+    private TextView smallAction(String label, int description) {
+        TextView action = new TextView(this);
+        action.setText(label);
+        action.setTextColor(Color.WHITE);
+        action.setTextSize(22);
+        action.setGravity(Gravity.CENTER);
+        action.setContentDescription(getString(description));
+        action.setBackground(roundRect(Color.rgb(44, 58, 77), 14, Color.rgb(73, 91, 115)));
+        return action;
+    }
+
+    private GradientDrawable roundRect(int fill, int radiusDp, int stroke) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(fill);
+        drawable.setCornerRadius(dp(radiusDp));
+        drawable.setStroke(dp(1), stroke);
+        return drawable;
+    }
+
+    private int contrastColor(int color) {
+        double luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color));
+        return luminance > 150 ? Color.BLACK : Color.WHITE;
+    }
+
+    private void setEnabledRecursive(View view, boolean enabled) {
+        view.setEnabled(enabled);
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) setEnabledRecursive(group.getChildAt(i), enabled);
+        }
+    }
+
+    private void showHookResult(SmoothCursorShellHook.Result result) {
+        int message = 0;
+        if (result == SmoothCursorShellHook.Result.INSTALLED) message = R.string.sc_hook_installed;
+        else if (result == SmoothCursorShellHook.Result.RESTORED) message = R.string.sc_hook_restored;
+        else if (result == SmoothCursorShellHook.Result.UNSUPPORTED) message = R.string.sc_hook_unsupported;
+        else if (result == SmoothCursorShellHook.Result.FAILED) message = R.string.sc_hook_failed;
+        if (message != 0) Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void styleActionButton(Button button, boolean accent) {
+        button.setAllCaps(false);
+        button.setTextSize(14);
+        button.setTextColor(Color.WHITE);
+        button.setBackground(roundRect(accent ? Color.rgb(55, 110, 205) : Color.rgb(38, 51, 69),
+            14, accent ? Color.rgb(92, 146, 236) : Color.rgb(58, 75, 96)));
+        button.setElevation(dp(2));
+    }
+
+    private AlphaAnimation enterAnimation() {
+        AlphaAnimation animation = new AlphaAnimation(0f, 1f);
+        animation.setDuration(180);
+        animation.setInterpolator(new DecelerateInterpolator());
+        return animation;
+    }
+
     private int sectionTitle(String section) {
         switch (section) {
             case SECTION_CURSOR: return R.string.sc_section_cursor;
@@ -264,6 +647,9 @@ public final class SmoothCursorSettingsActivity extends Activity {
             case SECTION_FADE: return R.string.sc_section_fade;
             case SECTION_IMAGE_CURSOR: return R.string.sc_section_image_cursor;
             case SECTION_LINE_HIGHLIGHT: return R.string.sc_section_line_highlight;
+            case SECTION_COMMAND_ERROR: return R.string.sc_section_command_error;
+            case SECTION_COMMAND_PULSE: return R.string.sc_section_command_pulse;
+            case SECTION_COMMAND_RULES: return R.string.sc_section_command_rules;
             default: return R.string.action_open_smooth_cursor_settings;
         }
     }
@@ -272,13 +658,27 @@ public final class SmoothCursorSettingsActivity extends Activity {
         Button item = new Button(this);
         item.setText(title);
         item.setAllCaps(false);
+        item.setTextSize(16);
+        item.setTextColor(Color.WHITE);
         item.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        item.setPadding(dp(18), 0, dp(18), 0);
+        GradientDrawable card = new GradientDrawable();
+        card.setColor(Color.rgb(28, 37, 51));
+        card.setCornerRadius(dp(16));
+        card.setStroke(dp(1), Color.rgb(53, 68, 88));
+        item.setBackground(card);
+        item.setElevation(dp(2));
         item.setOnClickListener(v -> {
             Intent intent = new Intent(this, SmoothCursorSettingsActivity.class);
             intent.putExtra(EXTRA_SECTION, section);
+            intent.putExtra(SmoothCursorShellHook.EXTRA_SHELL, shellName);
             startActivity(intent);
         });
-        content.addView(item, matchWrap());
+        LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(58));
+        itemParams.bottomMargin = dp(8);
+        content.addView(item, itemParams);
+        item.startAnimation(enterAnimation());
     }
 
     private void addHeader(int title) {
@@ -818,6 +1218,7 @@ public final class SmoothCursorSettingsActivity extends Activity {
     private void addResetButton() {
         Button reset = new Button(this);
         reset.setText(R.string.sc_reset);
+        styleActionButton(reset, false);
         reset.setOnClickListener(v -> new AlertDialog.Builder(this)
             .setMessage(R.string.sc_reset_confirm)
             .setNegativeButton(android.R.string.cancel, null)

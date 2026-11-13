@@ -355,7 +355,7 @@
     <string name="sc_color_effect_speed">Gradient/rainbow speed</string>
     <string name="sc_feature_custom_color">Custom cursor color</string>
     <string name="sc_feature_image_cursor">Image cursor</string>
-    <string name="sc_feature_error_flash">Red error flash</string>
+    <string name="sc_feature_error_flash">Command error effect</string>
     <string name="sc_feature_gradient">Gradient</string>
     <string name="sc_feature_rainbow">Rainbow</string>
     <string name="sc_incompatible_disabled">Disabled: %1$s, incompatible with %2$s</string>
@@ -378,4 +378,41 @@
     <string name="sc_line_highlight_alpha">Transparency</string>
     <string name="sc_line_highlight_speed">Movement speed</string>
 
+
+    <string name="sc_section_command_error">Command results</string>
+    <string name="sc_error_effect_enabled">Highlight command errors and Ctrl+C</string>
+    <string name="sc_error_effect_type">Effect type</string>
+    <string name="sc_error_type_tint">Smooth recoloring</string>
+    <string name="sc_error_type_flash">Soft flash</string>
+    <string name="sc_error_effect_color">Error color</string>
+    <string name="sc_cancel_effect_color">Ctrl+C color</string>
+    <string name="sc_error_effect_duration">Effect duration</string>
+    <string name="sc_error_effect_strength">Effect strength</string>
+    <string name="sc_section_command_pulse">Command activity</string>
+    <string name="sc_command_pulse_enabled">Pulse cursor while a command runs</string>
+    <string name="sc_command_vibration_enabled">Vibrate briefly when a command finishes in the app</string>
+    <string name="sc_command_vibration_strength">Vibration strength</string>
+    <string name="sc_command_notification_enabled">Notify when a command finishes in the background</string>
+    <string name="sc_section_command_rules">Command color rules</string>
+    <string name="sc_command_rules_enabled">Apply command color rules</string>
+    <string name="sc_command_rules_help">The first case-sensitive rule found as whole words wins. Rules change only the cursor color; move them to set priority.</string>
+    <string name="sc_command_rule_add">Add rule</string>
+    <string name="sc_command_rule_hint">Command words, e.g. npm install</string>
+    <string name="sc_command_rule_pulse">Pulse</string>
+    <string name="sc_command_rule_color">Rule color</string>
+    <string name="sc_command_rule_save">Save rule text</string>
+    <string name="sc_command_rule_saved">Rule saved</string>
+    <string name="sc_command_rule_required">Enter command text</string>
+    <string name="sc_command_rule_move_up">Move rule up</string>
+    <string name="sc_command_rule_move_down">Move rule down</string>
+    <string name="sc_command_rule_delete">Delete rule</string>
+    <string name="sc_command_finished">Command finished</string>
+    <string name="sc_command_finished_notification">A terminal command has finished.</string>
+    <string name="sc_command_notification_channel">Command completion</string>
+    <string name="sc_hook_installed">Shell command hook added. It will run in new shell sessions.</string>
+    <string name="sc_hook_restored">The enabled shell hook was missing and has been restored.</string>
+    <string name="sc_hook_unsupported">This shell is not supported. Command effects are inactive.</string>
+    <string name="sc_hook_failed">Could not update the shell startup file.</string>
+
+    <string name="sc_command_rules_color">Common rule color</string>
 </resources>

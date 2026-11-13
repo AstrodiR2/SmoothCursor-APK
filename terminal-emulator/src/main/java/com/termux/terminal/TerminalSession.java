@@ -337,6 +337,11 @@ public final class TerminalSession extends TerminalOutput {
         mClient.onColorsChanged(this);
     }
 
+    /** Forward a private command-hook OSC event to the active session client. */
+    public void onSmoothCursorCommandEvent(String event) {
+        if (event != null) mClient.onSmoothCursorCommandEvent(this, event);
+    }
+
     public int getPid() {
         return mShellPid;
     }

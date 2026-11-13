@@ -1,6 +1,8 @@
 package com.termux.app;
 
 import android.app.Application;
+import android.app.Activity;
+import android.os.Bundle;
 import android.content.Context;
 import com.termux.BuildConfig;
 import com.termux.shared.errors.Error;
@@ -19,9 +21,25 @@ import com.termux.shared.termux.theme.TermuxThemeUtils;
 public class TermuxApplication extends Application {
 
     private static final String LOG_TAG = "TermuxApplication";
+    private static volatile int startedActivities;
+
+    public static boolean isAppInForeground() {
+        return startedActivities > 0;
+    }
 
     public void onCreate() {
         super.onCreate();
+        registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            @Override public void onActivityCreated(Activity activity, Bundle state) { }
+            @Override public void onActivityStarted(Activity activity) { startedActivities++; }
+            @Override public void onActivityResumed(Activity activity) { }
+            @Override public void onActivityPaused(Activity activity) { }
+            @Override public void onActivityStopped(Activity activity) {
+                startedActivities = Math.max(0, startedActivities - 1);
+            }
+            @Override public void onActivitySaveInstanceState(Activity activity, Bundle state) { }
+            @Override public void onActivityDestroyed(Activity activity) { }
+        });
         Context context = getApplicationContext();
         // Set crash handler for the app
         TermuxCrashUtils.setDefaultCrashHandler(this);

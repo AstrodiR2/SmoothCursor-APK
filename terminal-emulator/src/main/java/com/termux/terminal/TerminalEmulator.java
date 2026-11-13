@@ -2521,6 +2521,12 @@ public final class TerminalEmulator {
                     Logger.logError(mClient, LOG_TAG, "OSC Manipulate selection, invalid string '" + textParameter + "");
                 }
                 break;
+            case 777:
+                // Private SmoothCursor command events: OSC 777;SC;{B|E};status;base64-command
+                if (textParameter.startsWith("SC;") && mSession instanceof TerminalSession) {
+                    ((TerminalSession) mSession).onSmoothCursorCommandEvent(textParameter.substring(3));
+                }
+                break;
             case 104:
                 // "104;$c" → Reset Color Number $c. It is reset to the color specified by the corresponding X
                 // resource. Any number of c parameters may be given. These parameters correspond to the ANSI colors 0-7,
