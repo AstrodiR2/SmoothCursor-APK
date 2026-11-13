@@ -2,6 +2,7 @@ package com.termux.shared.termux.terminal;
 
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+
 import com.termux.shared.logger.Logger;
 import com.termux.terminal.TerminalSession;
 import com.termux.view.TerminalViewClient;
@@ -76,6 +77,8 @@ public class TermuxTerminalViewClientBase implements TerminalViewClient {
         return false;
     }
 
+
+
     @Override
     public boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session) {
         return false;
@@ -83,6 +86,7 @@ public class TermuxTerminalViewClientBase implements TerminalViewClient {
 
     @Override
     public void onEmulatorSet() {
+
     }
 
     @Override
@@ -119,4 +123,5 @@ public class TermuxTerminalViewClientBase implements TerminalViewClient {
     public void logStackTrace(String tag, Exception e) {
         Logger.logStackTrace(tag, e);
     }
+
 }

@@ -19,9 +19,6 @@ import com.termux.terminal.TextStyle;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * SmoothCursor rendering integrated into Termux itself. This class intentionally has no
@@ -52,6 +49,7 @@ public final class SmoothCursorEffects {
     public static final String K_FADE_ON = "fade_on";
     public static final String K_FADE_MS = "fade_ms";
     public static final String K_CURSOR_SHAPE = "cursor_shape";
+    public static final String K_CURSOR_BLINK_ON = "cursor_blink_on";
     public static final String K_ROUNDED_RADIUS = "rounded_radius";
     public static final String K_BREATHING_ON = "breathing_on";
     public static final String K_BREATHING_SPEED = "breathing_speed";
@@ -79,9 +77,6 @@ public final class SmoothCursorEffects {
     public static final String K_COMMAND_VIBRATION_ON = "command_vibration_on";
     public static final String K_COMMAND_VIBRATION_STRENGTH = "command_vibration_strength";
     public static final String K_COMMAND_NOTIFICATION_ON = "command_notification_on";
-    public static final String K_COMMAND_RULES_ON = "command_rules_on";
-    public static final String K_COMMAND_RULES = "command_rules";
-    public static final String K_COMMAND_RULE_DEFAULT_COLOR = "command_rule_default_color";
     public static final String K_HOOK_EVER_INSTALLED = "command_hook_ever_installed";
 
     public static final int CURSOR_SHAPE_FOLLOW_TERMINAL = 0;
@@ -129,7 +124,7 @@ public final class SmoothCursorEffects {
     private static volatile int color = 0xFFFFFFFF;
     private static volatile int outline = 0;
     private static volatile int trail = 50;
-    private static volatile boolean smoothScroll = true;
+    private static volatile boolean smoothScroll = false;
     private static volatile int scrollSpeed = 50;
     private static volatile boolean paddingEnabled;
     private static volatile int paddingX = 8;
@@ -140,7 +135,7 @@ public final class SmoothCursorEffects {
     private static volatile boolean glowCursorEnabled;
     private static volatile int glowCursorRadius = 6;
     private static volatile int glowCursorIntensity = 70;
-    private static volatile boolean fadeEnabled = true;
+    private static volatile boolean fadeEnabled = false;
     private static volatile int fadeMillis = 160;
     private static volatile int cursorShape = CURSOR_SHAPE_FOLLOW_TERMINAL;
     private static volatile int roundedRadius = 24;
@@ -169,10 +164,7 @@ public final class SmoothCursorEffects {
     private static volatile int errorStrength = 80;
     private static volatile long errorEffectStartNs;
     private static volatile long errorEffectUntilNs;
-    private static volatile boolean commandPulseEnabled = true;
-    private static volatile boolean commandRulesEnabled = true;
-    private static volatile List<CommandRule> commandRules = new ArrayList<>();
-    private static volatile CommandRule activeCommandRule;
+    private static volatile boolean commandPulseEnabled = false;
     private static volatile boolean commandRunning;
     private static volatile boolean commandPulseActive;
 
@@ -231,97 +223,38 @@ public final class SmoothCursorEffects {
 
     private SmoothCursorEffects() { }
 
+    public static boolean isCursorBlinkEnabled(Context context) {
+        return getPreferences(context).getBoolean(K_CURSOR_BLINK_ON, false);
+    }
+
     public static SharedPreferences getPreferences(Context context) {
         SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        if (!prefs.contains(K_COMMAND_RULES))
-            prefs.edit().putString(K_COMMAND_RULES, serializeCommandRules(defaultCommandRules())).apply();
+        // Remove obsolete persisted settings on upgrade.
+        if (prefs.contains("command_rules_on") || prefs.contains("command_rules")
+            || prefs.contains("command_rule_default_color")) {
+            prefs.edit().remove("command_rules_on").remove("command_rules")
+                .remove("command_rule_default_color").apply();
+        }
         return prefs;
-    }
-
-    public static final class CommandRule {
-        public final String command;
-        public final int color;
-        public final boolean pulse;
-        public final boolean customColor;
-
-        public CommandRule(String command, int color, boolean pulse) {
-            this(command, color, pulse, false);
-        }
-
-        public CommandRule(String command, int color, boolean pulse, boolean customColor) {
-            this.command = command == null ? "" : command.trim();
-            this.color = color | 0xFF000000;
-            this.pulse = pulse;
-            this.customColor = customColor;
-        }
-    }
-
-    public static List<CommandRule> defaultCommandRules() {
-        String[] commands = {"npm install", "npm i", "yarn add", "pnpm install", "pip install",
-            "pkg install", "pkg upgrade", "apt install", "cargo install", "git clone", "git pull",
-            "curl", "wget", "aria2c", "yt-dlp", "gradle", "./gradlew"};
-        List<CommandRule> result = new ArrayList<>();
-        for (String command : commands) result.add(new CommandRule(command, 0xFF42A5F5, false));
-        return result;
-    }
-
-    public static List<CommandRule> getCommandRules(SharedPreferences prefs) {
-        String encoded = prefs.getString(K_COMMAND_RULES, null);
-        if (encoded == null) return defaultCommandRules();
-        List<CommandRule> result = new ArrayList<>();
-        try {
-            JSONArray array = new JSONArray(encoded);
-            int defaultColor = prefs.getInt(K_COMMAND_RULE_DEFAULT_COLOR, 0xFF42A5F5);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject item = array.optJSONObject(i);
-                if (item == null) continue;
-                String command = item.optString("command", "").trim();
-                boolean customColor = item.optBoolean("customColor", false);
-                if (!command.isEmpty()) result.add(new CommandRule(command,
-                    customColor ? item.optInt("color", defaultColor) : defaultColor,
-                    item.optBoolean("pulse", false), customColor));
-            }
-        } catch (JSONException ignored) { }
-        return result;
-    }
-
-    public static String serializeCommandRules(List<CommandRule> rules) {
-        JSONArray array = new JSONArray();
-        if (rules != null) for (CommandRule rule : rules) {
-            if (rule == null || rule.command.trim().isEmpty()) continue;
-            JSONObject item = new JSONObject();
-            try {
-                item.put("command", rule.command.trim());
-                item.put("color", rule.color);
-                item.put("pulse", rule.pulse);
-                item.put("customColor", rule.customColor);
-                array.put(item);
-            } catch (JSONException ignored) { }
-        }
-        return array.toString();
-    }
-
-    public static void saveCommandRules(SharedPreferences prefs, List<CommandRule> rules) {
-        prefs.edit().putString(K_COMMAND_RULES, serializeCommandRules(rules)).apply();
     }
 
     public static boolean isCommandHookNeeded(SharedPreferences prefs) {
         return prefs.getBoolean(FEATURE_ERROR_FLASH, false)
-            || prefs.getBoolean(K_COMMAND_PULSE_ON, true)
-            || prefs.getBoolean(K_COMMAND_VIBRATION_ON, true)
-            || prefs.getBoolean(K_COMMAND_NOTIFICATION_ON, true)
-            || prefs.getBoolean(K_COMMAND_RULES_ON, true);
+            || prefs.getBoolean(K_COMMAND_PULSE_ON, false)
+            || prefs.getBoolean(K_COMMAND_VIBRATION_ON, false)
+            || prefs.getBoolean(K_COMMAND_NOTIFICATION_ON, false);
     }
 
     /** Start a shell command event received from the shared OSC hook. */
     public static void onCommandStarted(Context context, String command) {
         ensureLoaded(context);
-        activeCommandRule = commandRulesEnabled ? firstMatchingRule(commandRules, command) : null;
         commandRunning = true;
-        commandPulseActive = commandPulseEnabled && (activeCommandRule == null || activeCommandRule.pulse);
+        commandPulseActive = commandPulseEnabled;
         pulseUntilNs = 0L;
-        pulseStartNs = System.nanoTime();
-        requestNextFrame();
+        if (commandPulseActive) {
+            pulseStartNs = System.nanoTime();
+            requestNextFrame();
+        }
     }
 
     /** Finish the current command, triggering B only for real failures or Ctrl+C. */
@@ -329,7 +262,6 @@ public final class SmoothCursorEffects {
         ensureLoaded(context);
         commandRunning = false;
         commandPulseActive = false;
-        activeCommandRule = null;
         if (prefsErrorEnabled() && (exitCode == 130 || exitCode != 0)) {
             activeErrorColor = exitCode == 130 ? cancelColor : errorColor;
             errorEffectStartNs = System.nanoTime();
@@ -349,28 +281,6 @@ public final class SmoothCursorEffects {
         reload(preferences);
     }
 
-    private static CommandRule firstMatchingRule(List<CommandRule> rules, String command) {
-        if (command == null) return null;
-        for (CommandRule rule : rules) {
-            String phrase = rule.command.trim();
-            int from = 0;
-            while (!phrase.isEmpty()) {
-                int at = command.indexOf(phrase, from);
-                if (at < 0) break;
-                int end = at + phrase.length();
-                boolean leftBoundary = at == 0 || !isCommandWord(command.charAt(at - 1));
-                boolean rightBoundary = end == command.length() || !isCommandWord(command.charAt(end));
-                if (leftBoundary && rightBoundary) return rule;
-                from = at + 1;
-            }
-        }
-        return null;
-    }
-
-    private static boolean isCommandWord(char value) {
-        return Character.isLetterOrDigit(value) || value == '_';
-    }
-
     public static void attachView(TerminalView view) {
         viewRef = new WeakReference<>(view);
         if (preferences == null) {
@@ -384,6 +294,10 @@ public final class SmoothCursorEffects {
                 TerminalView attached = viewRef.get();
                 if (attached != null) {
                     attached.post(() -> {
+                        if ((key == null || K_CURSOR_BLINK_ON.equals(key))
+                            && !prefs.getBoolean(K_CURSOR_BLINK_ON, false)) {
+                            attached.setTerminalCursorBlinkerState(false, true);
+                        }
                         attached.updateSize();
                         attached.invalidate();
                     });
@@ -406,7 +320,7 @@ public final class SmoothCursorEffects {
         color = prefs.getInt(K_COLOR, 0xFFFFFFFF);
         outline = clamp(prefs.getInt(K_OUTLINE, 0), 0, 100);
         trail = clamp(prefs.getInt(K_TRAIL, 50), 0, 100);
-        smoothScroll = prefs.getBoolean(K_SMOOTH_SCROLL, true);
+        smoothScroll = prefs.getBoolean(K_SMOOTH_SCROLL, false);
         scrollSpeed = clamp(prefs.getInt(K_SCROLL_SPEED, 50), 0, 100);
         paddingEnabled = prefs.getBoolean(K_PAD_ON, false);
         paddingX = clamp(prefs.getInt(K_PAD_X, 8), 0, 64);
@@ -415,10 +329,10 @@ public final class SmoothCursorEffects {
         int sharedRadius = clamp(prefs.getInt(K_GLOW_RADIUS, 6), 1, 30);
         int sharedIntensity = clamp(prefs.getInt(K_GLOW_INTENSITY, 70), 0, 100);
         if (prefs.getBoolean(K_GLOW_SPLIT, false)) {
-            glowTextEnabled = prefs.getBoolean(K_GLOW_TEXT_ON, glowOn);
+            glowTextEnabled = prefs.getBoolean(K_GLOW_TEXT_ON, false);
             glowTextRadius = clamp(prefs.getInt(K_GLOW_TEXT_RADIUS, sharedRadius), 1, 30);
             glowTextIntensity = clamp(prefs.getInt(K_GLOW_TEXT_INTENSITY, sharedIntensity), 0, 100);
-            glowCursorEnabled = prefs.getBoolean(K_GLOW_CURSOR_ON, glowOn);
+            glowCursorEnabled = prefs.getBoolean(K_GLOW_CURSOR_ON, false);
             glowCursorRadius = clamp(prefs.getInt(K_GLOW_CURSOR_RADIUS, sharedRadius), 1, 30);
             glowCursorIntensity = clamp(prefs.getInt(K_GLOW_CURSOR_INTENSITY, sharedIntensity), 0, 100);
         } else {
@@ -427,7 +341,7 @@ public final class SmoothCursorEffects {
             glowTextRadius = glowCursorRadius = sharedRadius;
             glowTextIntensity = glowCursorIntensity = sharedIntensity;
         }
-        fadeEnabled = prefs.getBoolean(K_FADE_ON, true);
+        fadeEnabled = prefs.getBoolean(K_FADE_ON, false);
         fadeMillis = clamp(prefs.getInt(K_FADE_MS, 160), 50, 1000);
         cursorShape = clamp(prefs.getInt(K_CURSOR_SHAPE, CURSOR_SHAPE_FOLLOW_TERMINAL),
             CURSOR_SHAPE_FOLLOW_TERMINAL, CURSOR_SHAPE_PILL);
@@ -454,9 +368,7 @@ public final class SmoothCursorEffects {
         errorStyle = clamp(prefs.getInt(K_ERROR_STYLE, 0), 0, 1);
         errorDurationMs = clamp(prefs.getInt(K_ERROR_DURATION, 900), 150, 5000);
         errorStrength = clamp(prefs.getInt(K_ERROR_STRENGTH, 80), 0, 100);
-        commandPulseEnabled = prefs.getBoolean(K_COMMAND_PULSE_ON, true);
-        commandRulesEnabled = prefs.getBoolean(K_COMMAND_RULES_ON, true);
-        commandRules = getCommandRules(prefs);
+        commandPulseEnabled = prefs.getBoolean(K_COMMAND_PULSE_ON, false);
         String imagePath = prefs.getString(K_IMAGE_PATH, null);
         if (imagePath == null || !imagePath.equals(cursorImagePath)) {
             cursorImagePath = imagePath;
@@ -472,6 +384,15 @@ public final class SmoothCursorEffects {
             }
         }
         long now = System.nanoTime();
+        if (!commandPulseEnabled) {
+            commandPulseActive = false;
+            pulseUntilNs = 0L;
+        }
+        // Stop active one-shot effects immediately when their switches are turned off.
+        if (!prefs.getBoolean(FEATURE_ERROR_FLASH, false)) {
+            errorEffectStartNs = 0L;
+            errorEffectUntilNs = 0L;
+        }
         if (breathingEnabled && !wasBreathingEnabled) {
             breathingIntroStartNs = now;
             breathingCycleStartNs = now;
@@ -667,7 +588,7 @@ public final class SmoothCursorEffects {
             for (int col = 0; col < used; col++) hash = 31 * hash + text[col];
             hash = 31 * hash + 0x7f;
         }
-        if (!commandRunning && pulseHashInitialized && hash != lastPulseHash) {
+        if (commandPulseEnabled && !commandRunning && pulseHashInitialized && hash != lastPulseHash) {
             pulseStartNs = System.nanoTime();
             pulseUntilNs = pulseStartNs + 750_000_000L;
         }
@@ -718,13 +639,10 @@ public final class SmoothCursorEffects {
                            float cellWidth, int cellHeight, int baselineOffset, boolean visible) {
         cursorEffectAnimating = false;
         long currentTime = System.nanoTime();
-        boolean errorAnimating = currentTime < errorEffectUntilNs
-            && !(commandRunning && activeCommandRule != null);
+        boolean errorAnimating = currentTime < errorEffectUntilNs;
         if (emulator == null || (!visible && !breathingEnabled && !imageCursorEnabled
-            && !commandPulseActive && !commandRunning && !errorAnimating && currentTime >= pulseUntilNs)) return;
-        // A command rule is a temporary cursor-color override; image fill is the one
-        // established visual conflict and returns unchanged as soon as the command ends.
-        boolean showImageCursor = imageCursorEnabled && !(commandRunning && activeCommandRule != null);
+            && !commandPulseActive && !errorAnimating && currentTime >= pulseUntilNs)) return;
+        boolean showImageCursor = imageCursorEnabled;
         int col = emulator.getCursorCol();
         int row = emulator.getCursorRow() - topRow;
         float left = col;
@@ -884,8 +802,8 @@ public final class SmoothCursorEffects {
             canvas.drawPath(cursorPath, cursorStroke);
         }
         cursorEffectAnimating = breathingEnabled || commandPulseActive || now < pulseUntilNs
-            || (now < errorEffectUntilNs && !(commandRunning && activeCommandRule != null)) || trailAnimating
-            || (!imageCursorEnabled && activeCommandRule == null && (gradientEnabled || rainbowEnabled));
+            || (now < errorEffectUntilNs) || trailAnimating
+            || (!imageCursorEnabled && (gradientEnabled || rainbowEnabled));
         if (moving || cursorEffectAnimating) requestNextFrame();
     }
 
@@ -999,9 +917,7 @@ public final class SmoothCursorEffects {
 
     private static int getCursorColor(TerminalEmulator emulator, long now) {
         int baseColor;
-        if (commandRunning && activeCommandRule != null) {
-            baseColor = activeCommandRule.color;
-        } else if (rainbowEnabled) {
+        if (rainbowEnabled) {
             float[] hsv = {cyclePhase(now, colorSpeed, colorEffectStartNs) * 360f, 0.9f, 1f};
             baseColor = Color.HSVToColor(255, hsv);
         } else if (gradientEnabled) {
@@ -1011,8 +927,7 @@ public final class SmoothCursorEffects {
         } else {
             baseColor = useTheme ? emulator.mColors.mCurrentColors[TextStyle.COLOR_INDEX_CURSOR] : color;
         }
-        if (now < errorEffectUntilNs && errorStrength > 0
-            && !(commandRunning && activeCommandRule != null)) {
+        if (now < errorEffectUntilNs && errorStrength > 0) {
             float progress = (now - errorEffectStartNs) / (float) Math.max(1L, errorEffectUntilNs - errorEffectStartNs);
             float envelope = smoothEnvelope(progress);
             float amount = (errorStrength / 100f) * envelope;

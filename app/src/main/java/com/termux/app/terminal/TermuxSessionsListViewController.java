@@ -14,14 +14,17 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+
 import com.termux.R;
 import com.termux.app.TermuxActivity;
 import com.termux.shared.termux.shell.command.runner.terminal.TermuxSession;
 import com.termux.shared.theme.NightMode;
 import com.termux.shared.theme.ThemeUtils;
 import com.termux.terminal.TerminalSession;
+
 import java.util.List;
 
 public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession> implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -29,7 +32,6 @@ public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession
     final TermuxActivity mActivity;
 
     final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
-
     final StyleSpan italicSpan = new StyleSpan(Typeface.ITALIC);
 
     public TermuxSessionsListViewController(TermuxActivity activity, List<TermuxSession> sessionList) {
@@ -46,24 +48,39 @@ public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession
             LayoutInflater inflater = mActivity.getLayoutInflater();
             sessionRowView = inflater.inflate(R.layout.item_terminal_sessions_list, parent, false);
         }
+
         TextView sessionTitleView = sessionRowView.findViewById(R.id.session_title);
+
         TerminalSession sessionAtRow = getItem(position).getTerminalSession();
         if (sessionAtRow == null) {
             sessionTitleView.setText("null session");
             return sessionRowView;
         }
+
         boolean shouldEnableDarkTheme = ThemeUtils.shouldEnableDarkTheme(mActivity, NightMode.getAppNightMode().getName());
+
+        if (shouldEnableDarkTheme) {
+            sessionTitleView.setBackground(
+                ContextCompat.getDrawable(mActivity, R.drawable.session_background_black_selected)
+            );
+        }
+
         String name = sessionAtRow.mSessionName;
         String sessionTitle = sessionAtRow.getTitle();
+
         String numberPart = "[" + (position + 1) + "] ";
         String sessionNamePart = (TextUtils.isEmpty(name) ? "" : name);
         String sessionTitlePart = (TextUtils.isEmpty(sessionTitle) ? "" : ((sessionNamePart.isEmpty() ? "" : "\n") + sessionTitle));
+
         String fullSessionTitle = numberPart + sessionNamePart + sessionTitlePart;
         SpannableString fullSessionTitleStyled = new SpannableString(fullSessionTitle);
         fullSessionTitleStyled.setSpan(boldSpan, 0, numberPart.length() + sessionNamePart.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         fullSessionTitleStyled.setSpan(italicSpan, numberPart.length() + sessionNamePart.length(), fullSessionTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
         sessionTitleView.setText(fullSessionTitleStyled);
+
         boolean sessionRunning = sessionAtRow.isRunning();
+
         if (sessionRunning) {
             sessionTitleView.setPaintFlags(sessionTitleView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
         } else {
@@ -88,4 +105,5 @@ public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession
         mActivity.getTermuxTerminalSessionClient().renameSession(selectedSession.getTerminalSession());
         return true;
     }
+
 }

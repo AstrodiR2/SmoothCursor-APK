@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="smoothcursor_screen">#0E0E0E</color>
+    <color name="smoothcursor_card">#1A1A1A</color>
+    <color name="smoothcursor_divider">#2A2A2A</color>
+    <color name="smoothcursor_text">#EDEDED</color>
+    <color name="smoothcursor_secondary">#9A9A9A</color>
+    <color name="smoothcursor_accent">#D0D0D0</color>
+</resources>

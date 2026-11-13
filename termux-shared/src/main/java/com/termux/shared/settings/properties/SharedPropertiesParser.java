@@ -1,7 +1,9 @@
 package com.termux.shared.settings.properties;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
+
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -31,4 +33,5 @@ public interface SharedPropertiesParser {
      * @return Returns the {@link Object} object to store in the {@link HashMap <>} in-memory cache.
      */
     Object getInternalPropertyValueFromValue(@NonNull Context context, String key, String value);
+
 }

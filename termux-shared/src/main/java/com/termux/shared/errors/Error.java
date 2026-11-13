@@ -1,9 +1,12 @@
 package com.termux.shared.errors;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
+
 import com.termux.shared.logger.Logger;
 import com.termux.shared.markdown.MarkdownUtils;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,32 +14,19 @@ import java.util.List;
 
 public class Error implements Serializable {
 
-    /**
-     * The optional error label.
-     */
+    /** The optional error label. */
     private String label;
-
-    /**
-     * The error type.
-     */
+    /** The error type. */
     private String type;
-
-    /**
-     * The error code.
-     */
+    /** The error code. */
     private int code;
-
-    /**
-     * The error message.
-     */
+    /** The error message. */
     private String message;
-
-    /**
-     * The error exceptions.
-     */
+    /** The error exceptions. */
     private List<Throwable> throwablesList = new ArrayList<>();
 
     private static final String LOG_TAG = "Error";
+
 
     public Error() {
         InitError(null, null, null, null);
@@ -83,11 +73,14 @@ public class Error implements Serializable {
             this.type = type;
         else
             this.type = Errno.TYPE;
+
         if (code != null && code > Errno.ERRNO_SUCCESS.getCode())
             this.code = code;
         else
             this.code = Errno.ERRNO_SUCCESS.getCode();
+
         this.message = message;
+
         if (throwablesList != null)
             this.throwablesList = throwablesList;
     }
@@ -100,6 +93,7 @@ public class Error implements Serializable {
     public String getLabel() {
         return label;
     }
+
 
     public String getType() {
         return type;
@@ -127,6 +121,7 @@ public class Error implements Serializable {
         return Collections.unmodifiableList(throwablesList);
     }
 
+
     public synchronized boolean setStateFailed(@NonNull Error error) {
         return setStateFailed(error.getType(), error.getCode(), error.getMessage(), null);
     }
@@ -134,7 +129,6 @@ public class Error implements Serializable {
     public synchronized boolean setStateFailed(@NonNull Error error, Throwable throwable) {
         return setStateFailed(error.getType(), error.getCode(), error.getMessage(), Collections.singletonList(throwable));
     }
-
     public synchronized boolean setStateFailed(@NonNull Error error, List<Throwable> throwablesList) {
         return setStateFailed(error.getType(), error.getCode(), error.getMessage(), throwablesList);
     }
@@ -154,8 +148,10 @@ public class Error implements Serializable {
     public synchronized boolean setStateFailed(String type, int code, String message, List<Throwable> throwablesList) {
         this.message = message;
         this.throwablesList = throwablesList;
+
         if (type != null && !type.isEmpty())
             this.type = type;
+
         if (code > Errno.ERRNO_SUCCESS.getCode()) {
             this.code = code;
             return true;
@@ -170,11 +166,14 @@ public class Error implements Serializable {
         return code > Errno.ERRNO_SUCCESS.getCode();
     }
 
+
     @NonNull
     @Override
     public String toString() {
         return getErrorLogString(this);
     }
+
+
 
     /**
      * Log the {@link Error} and show a toast for the minimal {@link String} for the {@link Error}.
@@ -184,8 +183,7 @@ public class Error implements Serializable {
      * @param error The {@link Error} to convert.
      */
     public static void logErrorAndShowToast(Context context, String logTag, Error error) {
-        if (error == null)
-            return;
+        if (error == null) return;
         error.logErrorAndShowToast(context, logTag);
     }
 
@@ -194,6 +192,7 @@ public class Error implements Serializable {
         Logger.showToast(context, getMinimalErrorLogString(), true);
     }
 
+
     /**
      * Get a log friendly {@link String} for {@link Error} error parameters.
      *
@@ -201,17 +200,18 @@ public class Error implements Serializable {
      * @return Returns the log friendly {@link String}.
      */
     public static String getErrorLogString(final Error error) {
-        if (error == null)
-            return "null";
+        if (error == null) return "null";
         return error.getErrorLogString();
     }
 
     public String getErrorLogString() {
         StringBuilder logString = new StringBuilder();
+
         logString.append(getCodeString());
         logString.append("\n").append(getTypeAndMessageLogString());
         if (throwablesList != null && throwablesList.size() > 0)
             logString.append("\n").append(geStackTracesLogString());
+
         return logString.toString();
     }
 
@@ -222,15 +222,16 @@ public class Error implements Serializable {
      * @return Returns the log friendly {@link String}.
      */
     public static String getMinimalErrorLogString(final Error error) {
-        if (error == null)
-            return "null";
+        if (error == null) return "null";
         return error.getMinimalErrorLogString();
     }
 
     public String getMinimalErrorLogString() {
         StringBuilder logString = new StringBuilder();
+
         logString.append(getCodeString());
         logString.append(getTypeAndMessageLogString());
+
         return logString.toString();
     }
 
@@ -241,15 +242,16 @@ public class Error implements Serializable {
      * @return Returns the {@link String}.
      */
     public static String getMinimalErrorString(final Error error) {
-        if (error == null)
-            return "null";
+        if (error == null) return "null";
         return error.getMinimalErrorString();
     }
 
     public String getMinimalErrorString() {
         StringBuilder logString = new StringBuilder();
+
         logString.append("(").append(getCode()).append(") ");
         logString.append(getType()).append(": ").append(getMessage());
+
         return logString.toString();
     }
 
@@ -260,19 +262,22 @@ public class Error implements Serializable {
      * @return Returns the markdown {@link String}.
      */
     public static String getErrorMarkdownString(final Error error) {
-        if (error == null)
-            return "null";
+        if (error == null) return "null";
         return error.getErrorMarkdownString();
     }
 
     public String getErrorMarkdownString() {
         StringBuilder markdownString = new StringBuilder();
+
         markdownString.append(MarkdownUtils.getSingleLineMarkdownStringEntry("Error Code", getCode(), "-"));
-        markdownString.append("\n").append(MarkdownUtils.getMultiLineMarkdownStringEntry((Errno.TYPE.equals(getType()) ? "Error Message" : "Error Message (" + getType() + ")"), message, "-"));
+        markdownString.append("\n").append(MarkdownUtils.getMultiLineMarkdownStringEntry(
+            (Errno.TYPE.equals(getType()) ? "Error Message" : "Error Message (" + getType() + ")"), message, "-"));
         if (throwablesList != null && throwablesList.size() > 0)
             markdownString.append("\n\n").append(geStackTracesMarkdownString());
+
         return markdownString.toString();
     }
+
 
     public String getCodeString() {
         return Logger.getSingleLineLogStringEntry("Error Code", code, "-");
@@ -289,4 +294,5 @@ public class Error implements Serializable {
     public String geStackTracesMarkdownString() {
         return Logger.getStackTracesMarkdownString("StackTraces", Logger.getStackTracesStringArray(throwablesList));
     }
+
 }

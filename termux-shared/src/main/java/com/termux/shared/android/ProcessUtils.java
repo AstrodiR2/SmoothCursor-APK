@@ -2,9 +2,12 @@ package com.termux.shared.android;
 
 import android.app.ActivityManager;
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.termux.shared.logger.Logger;
+
 import java.util.List;
 
 public class ProcessUtils {
@@ -31,11 +34,10 @@ public class ProcessUtils {
      */
     @Nullable
     public static String getAppProcessNameForPid(@NonNull Context context, int pid) {
-        if (pid < 0)
-            return null;
+        if (pid < 0) return null;
+
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        if (activityManager == null)
-            return null;
+        if (activityManager == null) return null;
         try {
             List<ActivityManager.RunningAppProcessInfo> runningApps = activityManager.getRunningAppProcesses();
             if (runningApps == null) {
@@ -49,6 +51,8 @@ public class ProcessUtils {
         } catch (Exception e) {
             Logger.logStackTraceWithMessage(LOG_TAG, "Failed to get app process name for pid " + pid, e);
         }
+
         return null;
     }
+
 }

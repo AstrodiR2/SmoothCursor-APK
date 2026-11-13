@@ -16,7 +16,7 @@ import java.util.ArrayDeque;
 import java.util.Locale;
 import java.util.Queue;
 
-/** Installs the single shared command-event bridge used by error, pulse and rule effects. */
+/** Installs the single shared command-event bridge used by command-result and completion effects. */
 public final class SmoothCursorShellHook {
     public static final String EXTRA_SHELL = "smooth_cursor_shell_name";
 

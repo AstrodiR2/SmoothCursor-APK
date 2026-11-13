@@ -2,9 +2,8 @@
 
 <!DOCTYPE resources [
     <!ENTITY TERMUX_PACKAGE_NAME "com.termux">
-    <!ENTITY TERMUX_APP_NAME "Termux:Monet">
+    <!ENTITY TERMUX_APP_NAME "Termux">
     <!ENTITY TERMUX_API_APP_NAME "Termux:API">
-    <!ENTITY TERMUX_GUI_APP_NAME "Termux:GUI">
     <!ENTITY TERMUX_BOOT_APP_NAME "Termux:Boot">
     <!ENTITY TERMUX_FLOAT_APP_NAME "Termux:Float">
     <!ENTITY TERMUX_STYLING_APP_NAME "Termux:Styling">
@@ -59,9 +58,6 @@
     <string name="msg_disabling_terminal_toolbar">Disabling Terminal Toolbar</string>
 
 
-    <!-- Terminal Extra Keys -->
-    <string name="extra_keys_command_hint">Insert command…</string>
-
 
     <!-- Terminal Popup -->
     <string name="action_select_url">Select URL</string>
@@ -87,18 +83,13 @@
     <string name="title_confirm_kill_process">Really kill this session?</string>
 
     <string name="action_style_terminal">Style</string>
-    <string name="action_font_and_color">Font and Color</string>
-    <string name="action_set_background_image">Set background image</string>
-    <string name="action_remove_background_image">Remove background image</string>
-
     <string name="action_toggle_keep_screen_on">Keep screen on</string>
     <string name="action_open_help">Help</string>
     <string name="action_open_settings">Settings</string>
-    <string name="action_open_smooth_cursor_settings">SmoothCursor settings</string>
 
     <string name="action_report_issue">Report Issue</string>
     <string name="msg_generating_report">Generating Report</string>
-    <string name="msg_add_termux_debug_info">Add &TERMUX_APP_NAME; debug info to report?</string>
+    <string name="msg_add_termux_debug_info">Add termux debug info to report?</string>
 
     <string name="error_styling_not_installed">The &TERMUX_STYLING_APP_NAME; Plugin App is not installed.</string>
     <string name="action_styling_install">Install</string>
@@ -138,16 +129,9 @@
 
 
 
-    <!-- Termux Background Manager -->
-    <string name="title_restore_background_image">Background image detected. Do you want to restore it?</string>
-    <string name="error_background_image_loading_failed">Couldn\'t load background image. Setting background color.</string>
-    <string name="error_background_image_loading_from_gallery_failed">Failed to load image. Try another image.</string>
-
-
-
     <!-- Miscellaneous -->
     <string name="error_termux_service_start_failed_general">Failed to start TermuxService. Check logcat for exception message.</string>
-    <string name="error_termux_service_start_failed_bg">Failed to start TermuxService while app is in background due to android background restrictions.</string>
+    <string name="error_termux_service_start_failed_bg">Failed to start TermuxService while app is in background due to android bg restrictions.</string>
 
 
 
@@ -219,50 +203,6 @@
                     It should be enabled to try to fix the issue where soft keyboard covers part of extra keys/terminal view.
                     If it causes screen flickering on your devices, then disable it. (Default)</string>
 
-                <!-- Terminal View Activity Remove Task -->
-                <string name="termux_terminal_view_activity_remove_title">Prevent from remaining on recent apps</string>
-                <string name="termux_terminal_view_activity_remove_off">Once closed all terminal sessions, &TERMUX_APP_NAME; will close and remain visible in recent apps.</string>
-                <string name="termux_terminal_view_activity_remove_on">&TERMUX_APP_NAME; will close and remove itself from recent apps if there are no active terminal sessions. (Default)</string>
-
-
-        <!-- Termux Style Preferences -->
-        <string name="termux_style_preferences_title">&TERMUX_APP_NAME; Appearance</string>
-        <string name="termux_style_preferences_summary">Preferences for &TERMUX_APP_NAME; appearance and customisation</string>
-
-            <!-- Background Category -->
-            <string name="termux_background_header">Background</string>
-
-                <!-- Background Image -->
-                <string name="termux_background_image_enabled_title">Display background image</string>
-                <string name="termux_background_image_enabled_off">Background image will be disabled.
-                    To enable it, make sure that appropriate portrait and landscape files are present.
-                    If you want to set a new background, set it from context menu by long click on Terminal. (Default)</string>
-                <string name="termux_background_image_enabled_on">Background image will be enabled.</string>
-                
-                <!-- Monet Background -->
-                <string name="termux_monet_background_enabled_title">Monet Background (Unstable)</string>
-                <string name="termux_monet_background_enabled_off">Terminal Monet Background will be disabled.
-                    Turns the terminal background into monet (Default)</string>
-                <string name="termux_monet_background_enabled_on">Monet Background will be enabled.</string>
-                
-            <!-- Extra Keys Category -->
-            <string name="termux_extrakeys_header">Extra Keys</string>
-                
-                <!-- Extra Keys Blur -->
-                <string name="termux_extrakeys_blur_enabled_title">Extra Keys Blurred Background</string>
-                <string name="termux_extrakeys_blur_enabled_off">Extra Keys Blurred Background will be disabled.
-                    Adds a transparent and blurred Background to Extra Keys. (May impact performance) (Default)</string>
-                <string name="termux_extrakeys_blur_enabled_on">ExtraKeys Blurred Background will be enabled.</string>
-                
-            <!-- Sessions Category -->
-            <string name="termux_sessions_header">Sessions Menu</string>
-            
-                <!-- Sessions Blur -->
-                <string name="termux_sessions_blur_enabled_title">Sessions Blurred Background</string>
-                <string name="termux_sessions_blur_enabled_off">Sessions Blurred Background will be disabled.
-                    Adds a transparent and blurred Background to Sessions Menu. (May impact performance) (Default)</string>
-                <string name="termux_sessions_blur_enabled_on">Sessions Blurred Background will be enabled.</string>
-
 
 
     <!-- Termux:API App Preferences -->
@@ -283,12 +223,6 @@
 
 
 
-    <!-- Termux:GUI App Preferences -->
-    <string name="termux_gui_preferences_title">&TERMUX_GUI_APP_NAME;</string>
-    <string name="termux_gui_preferences_summary">Preferences for &TERMUX_GUI_APP_NAME; app</string>
-
-
-
     <!-- Termux:Widget App Preferences -->
     <string name="termux_widget_preferences_title">&TERMUX_WIDGET_APP_NAME;</string>
     <string name="termux_widget_preferences_summary">Preferences for &TERMUX_WIDGET_APP_NAME; app</string>
@@ -301,7 +235,9 @@
     <!-- Donate Preference -->
     <string name="donate_preference_title">Donate</string>
 
-    <!-- SmoothCursor settings embedded in the APK -->
+
+    <!-- SmoothCursor -->
+    <string name="action_open_smooth_cursor_settings">SmoothCursor settings</string>
     <string name="sc_section_cursor">Cursor</string>
     <string name="sc_use_theme">Use terminal cursor color</string>
     <string name="sc_cursor_color">Custom cursor color</string>
@@ -377,8 +313,6 @@
     <string name="sc_line_highlight_color">Highlight color</string>
     <string name="sc_line_highlight_alpha">Transparency</string>
     <string name="sc_line_highlight_speed">Movement speed</string>
-
-
     <string name="sc_section_command_error">Command results</string>
     <string name="sc_error_effect_enabled">Highlight command errors and Ctrl+C</string>
     <string name="sc_error_effect_type">Effect type</string>
@@ -393,19 +327,19 @@
     <string name="sc_command_vibration_enabled">Vibrate briefly when a command finishes in the app</string>
     <string name="sc_command_vibration_strength">Vibration strength</string>
     <string name="sc_command_notification_enabled">Notify when a command finishes in the background</string>
-    <string name="sc_section_command_rules">Command color rules</string>
-    <string name="sc_command_rules_enabled">Apply command color rules</string>
-    <string name="sc_command_rules_help">The first case-sensitive rule found as whole words wins. Rules change only the cursor color; move them to set priority.</string>
-    <string name="sc_command_rule_add">Add rule</string>
-    <string name="sc_command_rule_hint">Command words, e.g. npm install</string>
-    <string name="sc_command_rule_pulse">Pulse</string>
-    <string name="sc_command_rule_color">Rule color</string>
-    <string name="sc_command_rule_save">Save rule text</string>
-    <string name="sc_command_rule_saved">Rule saved</string>
-    <string name="sc_command_rule_required">Enter command text</string>
-    <string name="sc_command_rule_move_up">Move rule up</string>
-    <string name="sc_command_rule_move_down">Move rule down</string>
-    <string name="sc_command_rule_delete">Delete rule</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
     <string name="sc_command_finished">Command finished</string>
     <string name="sc_command_finished_notification">A terminal command has finished.</string>
     <string name="sc_command_notification_channel">Command completion</string>
@@ -414,5 +348,50 @@
     <string name="sc_hook_unsupported">This shell is not supported. Command effects are inactive.</string>
     <string name="sc_hook_failed">Could not update the shell startup file.</string>
 
-    <string name="sc_command_rules_color">Common rule color</string>
+    <!-- SmoothCursor terminal background -->
+    <string name="sc_section_background">Terminal background</string>
+    <string name="sc_background_mode">Background mode</string>
+    <string name="sc_background_off">Off</string>
+    <string name="sc_background_image">Image</string>
+    <string name="sc_background_video">Video</string>
+    <string name="sc_background_dim">Dim background</string>
+    <string name="sc_background_open_failed">Could not open or save the background file</string>
+
+    <!-- SmoothCursor redesign -->
+    <string name="sc_group_preview">Preview</string>
+    <string name="sc_group_shape">Shape</string>
+    <string name="sc_group_color">Color</string>
+    <string name="sc_group_effects">Effects</string>
+    <string name="sc_group_effect">Effect</string>
+    <string name="sc_group_file">File</string>
+    <string name="sc_group_result">Command result</string>
+    <string name="sc_group_mode">Mode</string>
+    <string name="sc_group_command">Command events</string>
+    <string name="sc_group_background_help">Background operation</string>
+    <string name="sc_setting_summary">Tap the row or switch to change this setting.</string>
+    <string name="sc_image_cursor_summary">Use a saved image inside the cursor.</string>
+    <string name="sc_menu_cursor_summary">Shape, color, outline and cursor behavior</string>
+    <string name="sc_menu_breathing_summary">Control the cursor breathing animation</string>
+    <string name="sc_menu_colors_summary">Choose fixed, gradient or rainbow colors</string>
+    <string name="sc_menu_scroll_summary">Tune terminal scrolling behavior</string>
+    <string name="sc_menu_padding_summary">Adjust the terminal content inset</string>
+    <string name="sc_menu_glow_summary">Configure text and cursor glow</string>
+    <string name="sc_menu_fade_summary">Set the text appearance animation</string>
+    <string name="sc_menu_image_summary">Choose an image cursor</string>
+    <string name="sc_menu_line_summary">Highlight the active terminal line</string>
+    <string name="sc_menu_result_summary">Configure command error feedback</string>
+    <string name="sc_menu_command_summary">Pulse, vibration and completion notice</string>
+    <string name="sc_menu_background_summary">Set an image or video background</string>
+    <string name="sc_cursor_blink_enabled">Cursor blinking</string>
+    <string name="sc_choose_image">Choose image</string>
+    <string name="sc_choose_video">Choose video</string>
+    <string name="sc_replace">Replace</string>
+    <string name="sc_remove">Remove</string>
+    <string name="sc_notification_permission_hint">Android 13 and later require notification access before completion notices can appear.</string>
+    <string name="sc_open_notification_settings">Open notification settings</string>
+    <string name="sc_notification_settings_unavailable">Could not open notification settings.</string>
+    <string name="sc_battery_hint">If Android restricts background work, allow Termux to ignore battery optimization. Active terminal sessions use a foreground service.</string>
+    <string name="sc_open_battery_settings">Allow background operation</string>
+    <string name="sc_battery_settings_unavailable">Could not open battery optimization settings.</string>
+
 </resources>

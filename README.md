@@ -2,7 +2,7 @@
 
 <h1>SmoothCursor</h1>
 
-<p><b>Neovide-style smooth cursor, neon glow, fade-in text and custom wallpaper for Termux</b></p>
+<p><b>SmoothCursor effects, inline terminal images and image/video terminal backgrounds for Termux</b></p>
 
 <p>
   <a href="README.md">🇬🇧 English</a> · <a href="README.ru.md">🇷🇺 Русский</a>
@@ -31,13 +31,13 @@ Made by **[AstrodiR2](https://github.com/AstrodiR2)**.
 - Smooth scrolling with adjustable speed
 - Padding, glow (shared or separate for text and cursor) and smooth text fade-in
 - All settings in the app, nothing to configure externally
-- Monet / Material You theming (`Termux:Monet`)
-
-**Not ported on purpose:** image/background/splash settings and the iTerm2/kitty graphics protocols.
+- SmoothCursor cursor effects, command feedback and shell hooks
+- Sixel and iTerm2 inline images, including the `imgcat` helper
+- Optional image or video terminal backgrounds with adjustable dimming
 
 ## Installation
 
-1. Open the **[Actions](../../actions)** tab of this repository, pick the latest successful **Build APK** run and download the artifact `termux-monet-universal` (or [Releases](../../releases) if available).
+1. Open the **[Actions](../../actions)** tab of this repository, pick the latest successful **Build APK** run and download the artifact `termux-universal` (or [Releases](../../releases) if available).
 2. Unzip the artifact and install the `.apk` (allow "Install unknown apps" for your browser/file manager).
 3. Open the app. No extra modules, no reboot.
 
@@ -58,7 +58,7 @@ Made by **[AstrodiR2](https://github.com/AstrodiR2)**.
 
 1. **Long-press** the terminal to open the context menu.
 2. Tap **SmoothCursor settings**.
-3. Tweak the cursor (color, outline, trail), scrolling speed, padding, glow and text fade-in.
+3. Choose a settings section to configure cursor effects, command feedback, inline images, or terminal background mode.
 4. Changes apply right away.
 
 ## Building it yourself
@@ -80,7 +80,7 @@ Forks and modifications are welcome, but **please credit the author**: keep the 
 
 ## Based on
 
-- [Termux](https://github.com/termux/termux-app), the terminal app this build is based on (upstream README kept in [`docs/upstream/`](docs/upstream/TERMUX_UPSTREAM_README.md))
+- [Termux](https://github.com/termux/termux-app), the upstream terminal app
 - The original [SmoothCursor Xposed module](https://github.com/AstrodiR2/SmoothCursor)
 
 ## License

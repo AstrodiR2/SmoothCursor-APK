@@ -2,6 +2,7 @@ package com.termux.shared.termux.terminal;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.termux.shared.logger.Logger;
 import com.termux.terminal.TerminalSession;
 import com.termux.terminal.TerminalSessionClient;
@@ -51,10 +52,13 @@ public class TermuxTerminalSessionClientBase implements TerminalSessionClient {
     public void setTerminalShellPid(@NonNull TerminalSession session, int pid) {
     }
 
+
     @Override
     public Integer getTerminalCursorStyle() {
         return null;
     }
+
+
 
     @Override
     public void logError(String tag, String message) {
@@ -90,4 +94,5 @@ public class TermuxTerminalSessionClientBase implements TerminalSessionClient {
     public void logStackTrace(String tag, Exception e) {
         Logger.logStackTrace(tag, e);
     }
+
 }

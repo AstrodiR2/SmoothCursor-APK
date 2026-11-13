@@ -22,9 +22,11 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.termux.shared.file.filesystem;
 
 import androidx.annotation.NonNull;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Objects;
@@ -45,8 +47,8 @@ import java.util.concurrent.TimeUnit;
  * @see java.nio.file.Files#setLastModifiedTime
  * @see java.nio.file.Files#getLastModifiedTime
  */
-public final class FileTime {
 
+public final class FileTime {
     /**
      * The unit of granularity to interpret the value. Null if
      * this {@code FileTime} is converted from an {@code Instant},
@@ -59,6 +61,7 @@ public final class FileTime {
      * The value since the epoch; can be negative.
      */
     private final long value;
+    
 
     /**
      * The value return by toString (created lazily)
@@ -145,8 +148,9 @@ public final class FileTime {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(milliSeconds);
             return new SimpleDateFormat(format).format(calendar.getTime());
-        } catch (Exception e) {
+        } catch(Exception e) {
             return Long.toString(milliSeconds);
         }
     }
+
 }

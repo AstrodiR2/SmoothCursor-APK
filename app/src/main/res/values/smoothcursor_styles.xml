@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="SmoothCursor.Screen">
+        <item name="android:background">@color/smoothcursor_screen</item>
+    </style>
+    <style name="SmoothCursor.Toolbar">
+        <item name="android:background">@color/smoothcursor_screen</item>
+        <item name="android:minHeight">56dp</item>
+    </style>
+    <style name="SmoothCursor.SectionHeader">
+        <item name="android:textColor">@color/smoothcursor_secondary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="SmoothCursor.Card">
+        <item name="android:background">@color/smoothcursor_card</item>
+        <item name="android:padding">16dp</item>
+    </style>
+</resources>

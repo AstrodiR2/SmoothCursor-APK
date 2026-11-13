@@ -1,1 +1,1 @@
-A fork of Termux-App with monet implementation and other features
+Terminal emulator app with a large set of command line utilities

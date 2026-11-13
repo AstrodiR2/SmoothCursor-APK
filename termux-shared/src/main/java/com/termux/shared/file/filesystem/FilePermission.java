@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -22,6 +23,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.termux.shared.file.filesystem;
 
 /**
@@ -35,42 +37,52 @@ package com.termux.shared.file.filesystem;
  *
  * @since 1.7
  */
+
 public enum FilePermission {
 
     /**
      * Read permission, owner.
      */
     OWNER_READ,
+
     /**
      * Write permission, owner.
      */
     OWNER_WRITE,
+
     /**
      * Execute/search permission, owner.
      */
     OWNER_EXECUTE,
+
     /**
      * Read permission, group.
      */
     GROUP_READ,
+
     /**
      * Write permission, group.
      */
     GROUP_WRITE,
+
     /**
      * Execute/search permission, group.
      */
     GROUP_EXECUTE,
+
     /**
      * Read permission, others.
      */
     OTHERS_READ,
+
     /**
      * Write permission, others.
      */
     OTHERS_WRITE,
+
     /**
      * Execute/search permission, others.
      */
     OTHERS_EXECUTE
+
 }

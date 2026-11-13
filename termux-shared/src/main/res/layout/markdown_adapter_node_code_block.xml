@@ -9,7 +9,7 @@
     android:paddingRight="16dip"
     android:scrollbarStyle="outsideInset">
 
-    <com.google.android.material.textview.MaterialTextView
+    <TextView
         android:id="@+id/code_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

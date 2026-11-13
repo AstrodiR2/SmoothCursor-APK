@@ -2,39 +2,35 @@ package com.termux.shared.android;
 
 import android.content.Context;
 import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.termux.shared.logger.Logger;
 
 public class SettingsProviderUtils {
 
     private static final String LOG_TAG = "SettingsProviderUtils";
 
-    /**
-     * The namespaces for {@link Settings} provider.
-     */
+    /** The namespaces for {@link Settings} provider. */
     public enum SettingNamespace {
-
-        /**
-         * The {@link Settings.Global} namespace
-         */
+        /** The {@link Settings.Global} namespace */
         GLOBAL,
-        /**
-         * The {@link Settings.Secure} namespace
-         */
+
+        /** The {@link Settings.Secure} namespace */
         SECURE,
-        /**
-         * The {@link Settings.System} namespace
-         */
+
+        /** The {@link Settings.System} namespace */
         SYSTEM
     }
 
-    /**
-     * The type of values for {@link Settings} provider.
-     */
+    /** The type of values for {@link Settings} provider. */
     public enum SettingType {
-
-        FLOAT, INT, LONG, STRING, URI
+        FLOAT,
+        INT,
+        LONG,
+        STRING,
+        URI
     }
 
     /**
@@ -48,11 +44,12 @@ public class SettingsProviderUtils {
      * @return Returns the key value. This will be {@code null} if an exception is raised.
      */
     @Nullable
-    public static Object getSettingsValue(@NonNull Context context, @NonNull SettingNamespace namespace, @NonNull SettingType type, @NonNull String key, @Nullable Object def) {
+    public static Object getSettingsValue(@NonNull Context context, @NonNull SettingNamespace namespace,
+                                          @NonNull SettingType type, @NonNull String key, @Nullable Object def) {
         try {
-            switch(namespace) {
+            switch (namespace) {
                 case GLOBAL:
-                    switch(type) {
+                    switch (type) {
                         case FLOAT:
                             return Settings.Global.getFloat(context.getContentResolver(), key);
                         case INT:
@@ -65,7 +62,7 @@ public class SettingsProviderUtils {
                             return Settings.Global.getUriFor(key);
                     }
                 case SECURE:
-                    switch(type) {
+                    switch (type) {
                         case FLOAT:
                             return Settings.Secure.getFloat(context.getContentResolver(), key);
                         case INT:
@@ -78,7 +75,7 @@ public class SettingsProviderUtils {
                             return Settings.Secure.getUriFor(key);
                     }
                 case SYSTEM:
-                    switch(type) {
+                    switch (type) {
                         case FLOAT:
                             return Settings.System.getFloat(context.getContentResolver(), key);
                         case INT:
@@ -98,4 +95,5 @@ public class SettingsProviderUtils {
         }
         return def;
     }
+
 }
